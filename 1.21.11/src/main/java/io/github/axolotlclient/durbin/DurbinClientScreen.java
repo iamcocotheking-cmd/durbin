@@ -68,12 +68,12 @@ public class DurbinClientScreen extends Screen {
 		int x = (width - panelW) / 2;
 		int y = (height - panelH) / 2;
 
-		fill(graphics, 0, 0, width, height, argb(35, 0, 0, 0));
+		fill(graphics, 0, 0, width, height, argb(18, 0, 0, 0));
 
 		// black, very transparent, square main panel
-		rect(graphics, x, y, panelW, panelH, argb(135, 210, 220, 235), argb(180, 0, 0, 0));
-		rect(graphics, x, y, panelW, 24, argb(150, 220, 230, 240), argb(215, 0, 0, 0));
-		fill(graphics, x + 1, y + 24, x + panelW - 1, y + 25, argb(115, 255, 255, 255));
+		rect(graphics, x, y, panelW, panelH, argb(95, 210, 220, 235), argb(95, 0, 0, 0));
+		rect(graphics, x, y, panelW, 24, argb(110, 220, 230, 240), argb(120, 0, 0, 0));
+		fill(graphics, x + 1, y + 24, x + panelW - 1, y + 25, argb(75, 255, 255, 255));
 
 		renderHeader(graphics, x, y, panelW, mouseX, mouseY);
 		renderTabs(graphics, x, y, panelW, mouseX, mouseY);
@@ -83,14 +83,14 @@ public class DurbinClientScreen extends Screen {
 
 	private void renderHeader(GuiGraphics g, int x, int y, int panelW, int mouseX, int mouseY) {
 		// Wide DURBIN logo in the header, similar to the reference style
-		int logoW = 112;
+		int logoW = 150;
 		int logoH = 20;
 		g.blit(RenderPipelines.GUI_TEXTURED, LOGO, x + 8, y + 2, 0, 0, logoW, logoH, logoW, logoH);
 
 		int closeX = x + panelW - 16;
 		int closeY = y + 6;
 		boolean hover = inside(mouseX, mouseY, closeX, closeY, 10, 10);
-		rect(g, closeX, closeY, 10, 10, argb(120, 230, 235, 245), hover ? argb(170, 50, 50, 50) : argb(140, 0, 0, 0));
+		rect(g, closeX, closeY, 10, 10, argb(120, 230, 235, 245), hover ? argb(120, 50, 50, 50) : argb(70, 0, 0, 0));
 		draw(g, "x", closeX + 3, closeY + 1, 0xFFFFFFFF, true);
 	}
 
@@ -101,8 +101,8 @@ public class DurbinClientScreen extends Screen {
 			int tabW = tab.equals("HUD Editor") ? 78 : 58;
 			boolean active = tab.equals(selectedTab);
 			boolean hover = inside(mouseX, mouseY, tabX, tabY, tabW, 15);
-			int fill = active ? argb(180, 0, 0, 0) : hover ? argb(120, 20, 20, 20) : argb(90, 0, 0, 0);
-			rect(g, tabX, tabY, tabW, 15, argb(110, 230, 235, 245), fill);
+			int fill = active ? argb(120, 0, 0, 0) : hover ? argb(70, 20, 20, 20) : argb(48, 0, 0, 0);
+			rect(g, tabX, tabY, tabW, 15, argb(82, 230, 235, 245), fill);
 			drawCentered(g, tab, tabX, tabY + 4, tabW, 0xFFFFFFFF);
 			tabX += tabW + 5;
 		}
@@ -116,7 +116,7 @@ public class DurbinClientScreen extends Screen {
 			int by = top + i * 17;
 			boolean active = FILTERS[i].equals(selectedFilter);
 			boolean hover = inside(mouseX, mouseY, leftX, by, 82, 14);
-			int fill = active ? argb(170, 0, 0, 0) : hover ? argb(115, 25, 25, 25) : argb(80, 0, 0, 0);
+			int fill = active ? argb(105, 0, 0, 0) : hover ? argb(62, 25, 25, 25) : argb(42, 0, 0, 0);
 			rect(g, leftX, by, 82, 14, argb(90, 230, 235, 245), fill);
 			draw(g, active ? "• " + FILTERS[i] : FILTERS[i], leftX + 7, by + 3, 0xFFFFFFFF, true);
 		}
@@ -135,7 +135,6 @@ public class DurbinClientScreen extends Screen {
 			draw(g, "Axolotl HUD Editor", bx, by, 0xFFFFFFFF, true);
 			draw(g, "Move, resize and configure real Axolotl HUD entries.", bx, by + 14, 0xFFD0D0D0, true);
 			button(g, bx, by + 38, 130, 18, "Open HUD Editor", mouseX, mouseY);
-			button(g, bx, by + 60, 130, 18, "Snapping: use editor", mouseX, mouseY);
 			return;
 		}
 		if (selectedTab.equals("Profiles")) {
@@ -171,8 +170,8 @@ public class DurbinClientScreen extends Screen {
 	private void renderHudCard(GuiGraphics g, HudEntry entry, int x, int y, int w, int h, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, w, h);
 		boolean enabled = entry.isEnabled();
-		int fill = enabled ? argb(165, 0, 0, 0) : hover ? argb(115, 20, 20, 20) : argb(85, 0, 0, 0);
-		rect(g, x, y, w, h, enabled ? argb(130, 255, 255, 255) : argb(70, 230, 235, 245), fill);
+		int fill = enabled ? argb(108, 0, 0, 0) : hover ? argb(62, 20, 20, 20) : argb(44, 0, 0, 0);
+		rect(g, x, y, w, h, enabled ? argb(96, 255, 255, 255) : argb(56, 230, 235, 245), fill);
 		String name = cleanName(entry);
 		draw(g, trim(name, w - 10), x + 6, y + 7, 0xFFFFFFFF, true);
 		draw(g, enabled ? "On" : "Off", x + 6, y + 20, enabled ? 0xFFFFFFFF : 0xFFC8C8C8, true);
@@ -181,12 +180,12 @@ public class DurbinClientScreen extends Screen {
 
 	private void button(GuiGraphics g, int x, int y, int w, int h, String text, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, w, h);
-		rect(g, x, y, w, h, argb(90, 230, 235, 245), hover ? argb(120, 25, 25, 25) : argb(95, 0, 0, 0));
+		rect(g, x, y, w, h, argb(90, 230, 235, 245), hover ? argb(68, 25, 25, 25) : argb(44, 0, 0, 0));
 		drawCentered(g, text, x, y + (h - 8) / 2, w, 0xFFFFFFFF);
 	}
 
 	private void toggle(GuiGraphics g, int x, int y, boolean enabled) {
-		rect(g, x, y, 22, 9, argb(110, 230, 235, 245), enabled ? argb(170, 255, 255, 255) : argb(90, 0, 0, 0));
+		rect(g, x, y, 22, 9, argb(82, 230, 235, 245), enabled ? argb(170, 255, 255, 255) : argb(90, 0, 0, 0));
 		fill(g, x + (enabled ? 13 : 1), y + 1, x + (enabled ? 21 : 9), y + 8, enabled ? 0xFF050505 : 0xFFFFFFFF);
 	}
 

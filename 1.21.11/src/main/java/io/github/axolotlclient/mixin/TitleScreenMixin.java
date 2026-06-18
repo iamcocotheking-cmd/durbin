@@ -28,6 +28,7 @@ import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import io.github.axolotlclient.AxolotlClient;
 import io.github.axolotlclient.AxolotlClientConfigCommon;
 import io.github.axolotlclient.durbin.DurbinClientScreen;
+import io.github.axolotlclient.durbin.DurbinMainMenuScreen;
 import io.github.axolotlclient.api.API;
 import io.github.axolotlclient.api.APIOptions;
 import io.github.axolotlclient.api.FriendsScreen;
@@ -50,6 +51,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
@@ -61,6 +63,14 @@ public abstract class TitleScreenMixin extends Screen {
 
 	protected TitleScreenMixin() {
 		super(Component.empty());
+	}
+
+
+	@Inject(method = "init", at = @At("TAIL"))
+	private void durbin$openCustomMainMenu(CallbackInfo ci) {
+		if (this.minecraft != null && !(this.minecraft.screen instanceof DurbinMainMenuScreen)) {
+			this.minecraft.setScreen(new DurbinMainMenuScreen());
+		}
 	}
 
 	@Inject(method = "createNormalMenuOptions", at = @At("HEAD"))
