@@ -39,7 +39,11 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Desktop;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier[] PANORAMA = {
@@ -57,14 +61,17 @@ public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
 	private static final Identifier PROMO = id("promo_card.png");
+	private static final String BUNDLED_PACK_PATH = "/assets/axolotlclient/resourcepacks/Durbin_Panorama_Pack.zip";
+	private static final String PACK_FILE_NAME = "Durbin_Panorama_Pack.zip";
 
 	private int singleX, singleY, singleW, singleH;
 	private int multiX, multiY, multiW, multiH;
-	private int settingsX, exitX, discordX, youtubeX, langX, iconY, iconSize;
+	private int settingsX, exitX, discordX, langX, iconY, iconSize;
 	private int closeX, closeY, closeSize;
 	private int accountX, accountY, accountSize;
 	private int promoX, promoY, promoW, promoH;
 	private final long openedAt = System.currentTimeMillis();
+	private boolean packCopied;
 
 	public DurbinMainMenuScreen() {
 		super(Component.literal("Durbin Client Main Menu"));
@@ -90,6 +97,7 @@ public class DurbinMainMenuScreen extends Screen {
 	@Override
 	public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float delta) {
 		super.render(g, mouseX, mouseY, delta);
+		ensureDurbinPanoramaPackInstalled();
 		layout();
 
 		float anim = openProgress();
@@ -113,7 +121,6 @@ public class DurbinMainMenuScreen extends Screen {
 		drawIconButton(g, SETTINGS, settingsX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, EXIT, exitX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, DISCORD, discordX, iconY + iconSlide, iconSize, mouseX, mouseY);
-		drawIconButton(g, YOUTUBE, youtubeX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, LANGUAGE, langX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
 		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
@@ -138,16 +145,15 @@ public class DurbinMainMenuScreen extends Screen {
 		this.multiX = singleX;
 		this.multiY = singleY + singleH + 8;
 
-		this.iconSize = Math.max(22, Math.min(32, this.width / 32));
+		this.iconSize = Math.max(18, Math.min(24, this.width / 44));
 		int gap = Math.max(8, iconSize / 3);
-		int total = iconSize * 5 + gap * 4;
+		int total = iconSize * 4 + gap * 3;
 		this.iconY = this.height - Math.max(44, this.height / 12);
 		int startX = (this.width - total) / 2;
 		this.settingsX = startX;
 		this.exitX = startX + iconSize + gap;
 		this.discordX = startX + (iconSize + gap) * 2;
-		this.youtubeX = startX + (iconSize + gap) * 3;
-		this.langX = startX + (iconSize + gap) * 4;
+		this.langX = startX + (iconSize + gap) * 3;
 
 		this.closeSize = Math.max(18, Math.min(28, this.width / 45));
 		this.closeX = this.width - closeSize - 12;
@@ -163,13 +169,9 @@ public class DurbinMainMenuScreen extends Screen {
 	}
 
 	private void drawSmoothPanorama(GuiGraphics g) {
-		// Stable panorama: use one face as a clean background and move it very slowly.
-		// Cycling cube faces as full-screen 2D images looked glitchy, so this keeps it smooth.
-		long now = System.currentTimeMillis();
-		int travel = Math.max(20, this.width / 26);
-		int offX = (int) (Math.sin(now / 9000.0D) * travel);
-		int offY = (int) (Math.cos(now / 12000.0D) * Math.max(8, this.height / 70));
-		drawCover(g, PANORAMA[0], offX - travel, offY - 12, this.width + travel * 2, this.height + 24, 1024, 1024);
+		// Static high-resolution panorama face from the bundled Durbin panorama resource pack.
+		// No movement here: this removes the lag/jitter while keeping the custom menu clean.
+		drawCover(g, PANORAMA[0], 0, 0, this.width, this.height, 1024, 1024);
 	}
 
 	private void drawPromoPanel(GuiGraphics g, int mouseX, int mouseY) {
@@ -179,7 +181,7 @@ public class DurbinMainMenuScreen extends Screen {
 			g.fill(promoX, promoY, promoX + promoW, promoY + promoH, argb(24, 255, 255, 255));
 		}
 		int badge = Math.max(16, promoH / 4);
-		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 64, 64);
+		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 48, 48);
 		drawTiny(g, "YouTube", promoX + 8, promoY + promoH - 12, 0xDDFFFFFF);
 	}
 
@@ -217,7 +219,7 @@ public class DurbinMainMenuScreen extends Screen {
 		int drawSize = hover ? size + 2 : size;
 		int drawX = hover ? x - 1 : x;
 		int drawY = hover ? y - 1 : y;
-		drawScaledTexture(g, tex, drawX, drawY, drawSize, drawSize, 64, 64);
+		drawScaledTexture(g, tex, drawX, drawY, drawSize, drawSize, 48, 48);
 	}
 
 	private void drawScaledTexture(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th) {
@@ -266,7 +268,7 @@ public class DurbinMainMenuScreen extends Screen {
 			openUrl("https://discord.gg/PqnbXNrtHR");
 			return true;
 		}
-		if (inside(mouseX, mouseY, youtubeX, iconY, iconSize, iconSize) || inside(mouseX, mouseY, promoX, promoY, promoW, promoH)) {
+		if (inside(mouseX, mouseY, promoX, promoY, promoW, promoH)) {
 			playClick();
 			openUrl("https://www.youtube.com/@Cosa_5023_YT");
 			return true;
@@ -306,6 +308,22 @@ public class DurbinMainMenuScreen extends Screen {
 				existing.ip = "play.portalbd.fun";
 			}
 			servers.save();
+		} catch (Exception ignored) {
+		}
+	}
+
+	private void ensureDurbinPanoramaPackInstalled() {
+		if (packCopied || minecraft == null) {
+			return;
+		}
+		packCopied = true;
+		try (InputStream in = DurbinMainMenuScreen.class.getResourceAsStream(BUNDLED_PACK_PATH)) {
+			if (in == null) {
+				return;
+			}
+			Path resourcePacks = minecraft.gameDirectory.toPath().resolve("resourcepacks");
+			Files.createDirectories(resourcePacks);
+			Files.copy(in, resourcePacks.resolve(PACK_FILE_NAME), StandardCopyOption.REPLACE_EXISTING);
 		} catch (Exception ignored) {
 		}
 	}
