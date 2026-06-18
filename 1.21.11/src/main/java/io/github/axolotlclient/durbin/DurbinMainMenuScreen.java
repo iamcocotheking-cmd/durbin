@@ -75,8 +75,8 @@ public class DurbinMainMenuScreen extends Screen {
 		super.render(g, mouseX, mouseY, delta);
 		layout();
 
-		drawCover(g, BG, 0, 0, this.width, this.height, 1024, 1024);
-		g.fill(0, 0, this.width, this.height, argb(108, 0, 0, 0));
+		drawCover(g, BG, 0, 0, this.width, this.height, 1046, 1046);
+		g.fill(0, 0, this.width, this.height, argb(130, 0, 0, 0));
 		g.fill(0, 0, this.width, 55, argb(35, 0, 0, 0));
 		g.fill(0, this.height - 70, this.width, this.height, argb(65, 0, 0, 0));
 
@@ -84,7 +84,7 @@ public class DurbinMainMenuScreen extends Screen {
 		int logoH = logoW * 236 / 376;
 		int logoX = (this.width - logoW) / 2;
 		int logoY = Math.max(22, this.height / 2 - 130);
-		g.blit(RenderPipelines.GUI_TEXTURED, LOGO, logoX, logoY, 0, 0, logoW, logoH, 376, 236);
+		drawScaledTexture(g, LOGO, logoX, logoY, logoW, logoH, 376, 236);
 
 		drawImageButton(g, SINGLE, singleX, singleY, singleW, singleH, 784, 64, inside(mouseX, mouseY, singleX, singleY, singleW, singleH));
 		drawImageButton(g, MULTI, multiX, multiY, multiW, multiH, 784, 64, inside(mouseX, mouseY, multiX, multiY, multiW, multiH));
@@ -96,7 +96,7 @@ public class DurbinMainMenuScreen extends Screen {
 		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
 		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
 
-		g.blit(RenderPipelines.GUI_TEXTURED, PROMO, promoX, promoY, 0, 0, promoW, promoH, 382, 178);
+		drawScaledTexture(g, PROMO, promoX, promoY, promoW, promoH, 382, 178);
 
 		drawTiny(g, "Durbin Client 1.21.11", 6, this.height - 10, 0x66FFFFFF);
 		drawTiny(g, "Copyright COSA", this.width - 62, this.height - 10, 0x66FFFFFF);
@@ -149,11 +149,11 @@ public class DurbinMainMenuScreen extends Screen {
 		}
 		int dx = x + (w - drawW) / 2;
 		int dy = y + (h - drawH) / 2;
-		g.blit(RenderPipelines.GUI_TEXTURED, texture, dx, dy, 0, 0, drawW, drawH, tw, th);
+		drawScaledTexture(g, texture, dx, dy, drawW, drawH, tw, th);
 	}
 
 	private void drawImageButton(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th, boolean hover) {
-		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0, 0, w, h, tw, th);
+		drawScaledTexture(g, tex, x, y, w, h, tw, th);
 		if (hover) {
 			g.fill(x, y, x + w, y + h, argb(26, 255, 255, 255));
 		}
@@ -163,7 +163,16 @@ public class DurbinMainMenuScreen extends Screen {
 		boolean hover = inside(mouseX, mouseY, x, y, size, size);
 		g.fill(x, y, x + size, y + size, hover ? argb(120, 255, 255, 255) : argb(70, 255, 255, 255));
 		int pad = Math.max(4, size / 5);
-		g.blit(RenderPipelines.GUI_TEXTURED, tex, x + pad, y + pad, 0, 0, size - pad * 2, size - pad * 2, 64, 64);
+		drawScaledTexture(g, tex, x + pad, y + pad, size - pad * 2, size - pad * 2, 64, 64);
+	}
+
+	private void drawScaledTexture(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th) {
+		float sx = (float) w / (float) tw;
+		float sy = (float) h / (float) th;
+		g.pose().pushMatrix();
+		g.pose().scale(sx, sy);
+		g.blit(RenderPipelines.GUI_TEXTURED, tex, Math.round(x / sx), Math.round(y / sy), 0, 0, tw, th, tw, th);
+		g.pose().popMatrix();
 	}
 
 	private void drawTiny(GuiGraphics g, String text, int x, int y, int color) {

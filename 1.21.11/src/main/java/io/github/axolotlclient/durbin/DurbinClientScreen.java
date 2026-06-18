@@ -42,8 +42,36 @@ import java.util.Locale;
 
 public class DurbinClientScreen extends Screen {
 	private static final Identifier LOGO = Identifier.fromNamespaceAndPath("axolotlclient", "textures/durbin_header_logo.png");
+	private static final Identifier ICON_TAB_MODS = uiIcon("tab_mods.png");
+	private static final Identifier ICON_TAB_HUD_EDITOR = uiIcon("tab_hud_editor.png");
+	private static final Identifier ICON_TAB_PROFILES = uiIcon("tab_profiles.png");
+	private static final Identifier ICON_TAB_ABOUT = uiIcon("tab_about.png");
+	private static final Identifier ICON_FILTER_ALL = uiIcon("filter_all.png");
+	private static final Identifier ICON_FILTER_HUD = uiIcon("filter_hud.png");
+	private static final Identifier ICON_FILTER_VANILLA = uiIcon("filter_vanilla.png");
+	private static final Identifier ICON_FILTER_ITEMS = uiIcon("filter_items.png");
+	private static final Identifier ICON_FILTER_INFO = uiIcon("filter_info.png");
+	private static final Identifier ICON_DISCORD = uiIcon("btn_discord.png");
+	private static final Identifier ICON_YOUTUBE = uiIcon("btn_youtube.png");
+	private static final Identifier ICON_CLOSE = uiIcon("close.png");
+	private static final Identifier ICON_FPS = uiIcon("hud_fps.png");
+	private static final Identifier ICON_CPS = uiIcon("hud_cps.png");
+	private static final Identifier ICON_KEYSTROKES = uiIcon("hud_keystrokes.png");
+	private static final Identifier ICON_ARMOR = uiIcon("hud_armor.png");
+	private static final Identifier ICON_COORDS = uiIcon("hud_coords.png");
+	private static final Identifier ICON_PING = uiIcon("hud_ping.png");
+	private static final Identifier ICON_POTION = uiIcon("hud_potion.png");
+	private static final Identifier ICON_DIRECTION = uiIcon("hud_direction.png");
+	private static final Identifier ICON_ITEMS = uiIcon("hud_items.png");
+	private static final Identifier ICON_HUD_ICON = uiIcon("hud_icon.png");
+	private static final Identifier ICON_SPEED = uiIcon("hud_speed.png");
+	private static final Identifier ICON_GENERIC = uiIcon("hud_generic.png");
 	private static final String[] TABS = {"Mods", "HUD Editor", "Profiles", "About"};
 	private static final String[] FILTERS = {"All", "HUD", "Vanilla", "Items", "Info"};
+
+	private static Identifier uiIcon(String name) {
+		return Identifier.fromNamespaceAndPath("axolotlclient", "textures/durbin/ui/" + name);
+	}
 
 	private final Screen parent;
 	private String selectedTab = "Mods";
@@ -83,27 +111,28 @@ public class DurbinClientScreen extends Screen {
 
 	private void renderHeader(GuiGraphics g, int x, int y, int panelW, int mouseX, int mouseY) {
 		// Wide DURBIN logo in the header, similar to the reference style
-		int logoW = 150;
-		int logoH = 20;
-		g.blit(RenderPipelines.GUI_TEXTURED, LOGO, x + 8, y + 2, 0, 0, logoW, logoH, logoW, logoH);
+		int logoW = 108;
+		int logoH = 24;
+		drawScaledTexture(g, LOGO, x + 8, y + 0, logoW, logoH, 360, 80);
 
 		int closeX = x + panelW - 16;
 		int closeY = y + 6;
 		boolean hover = inside(mouseX, mouseY, closeX, closeY, 10, 10);
 		rect(g, closeX, closeY, 10, 10, argb(120, 230, 235, 245), hover ? argb(120, 50, 50, 50) : argb(70, 0, 0, 0));
-		draw(g, "x", closeX + 3, closeY + 1, 0xFFFFFFFF, true);
+		drawIcon(g, ICON_CLOSE, closeX + 1, closeY + 1, 8);
 	}
 
 	private void renderTabs(GuiGraphics g, int x, int y, int panelW, int mouseX, int mouseY) {
 		int tabX = x + 8;
 		int tabY = y + 30;
 		for (String tab : TABS) {
-			int tabW = tab.equals("HUD Editor") ? 78 : 58;
+			int tabW = tabWidth(tab);
 			boolean active = tab.equals(selectedTab);
 			boolean hover = inside(mouseX, mouseY, tabX, tabY, tabW, 15);
 			int fill = active ? argb(120, 0, 0, 0) : hover ? argb(70, 20, 20, 20) : argb(48, 0, 0, 0);
 			rect(g, tabX, tabY, tabW, 15, argb(82, 230, 235, 245), fill);
-			drawCentered(g, tab, tabX, tabY + 4, tabW, 0xFFFFFFFF);
+			drawIcon(g, tabIcon(tab), tabX + 5, tabY + 3, 9);
+			draw(g, tab, tabX + 18, tabY + 4, 0xFFFFFFFF, true);
 			tabX += tabW + 5;
 		}
 	}
@@ -118,12 +147,13 @@ public class DurbinClientScreen extends Screen {
 			boolean hover = inside(mouseX, mouseY, leftX, by, 82, 14);
 			int fill = active ? argb(105, 0, 0, 0) : hover ? argb(62, 25, 25, 25) : argb(42, 0, 0, 0);
 			rect(g, leftX, by, 82, 14, argb(90, 230, 235, 245), fill);
-			draw(g, active ? "• " + FILTERS[i] : FILTERS[i], leftX + 7, by + 3, 0xFFFFFFFF, true);
+			drawIcon(g, filterIcon(FILTERS[i]), leftX + 5, by + 3, 8);
+			draw(g, FILTERS[i], leftX + 18, by + 3, 0xFFFFFFFF, true);
 		}
 
 		int linkY = y + panelH - 38;
-		button(g, leftX, linkY, 82, 14, "Discord", mouseX, mouseY);
-		button(g, leftX, linkY + 16, 82, 14, "YouTube", mouseX, mouseY);
+		iconButton(g, leftX, linkY, 82, 14, "Discord", ICON_DISCORD, mouseX, mouseY);
+		iconButton(g, leftX, linkY + 16, 82, 14, "YouTube", ICON_YOUTUBE, mouseX, mouseY);
 	}
 
 	private void renderBody(GuiGraphics g, int x, int y, int panelW, int panelH, int mouseX, int mouseY) {
@@ -173,15 +203,73 @@ public class DurbinClientScreen extends Screen {
 		int fill = enabled ? argb(108, 0, 0, 0) : hover ? argb(62, 20, 20, 20) : argb(44, 0, 0, 0);
 		rect(g, x, y, w, h, enabled ? argb(96, 255, 255, 255) : argb(56, 230, 235, 245), fill);
 		String name = cleanName(entry);
-		draw(g, trim(name, w - 10), x + 6, y + 7, 0xFFFFFFFF, true);
-		draw(g, enabled ? "On" : "Off", x + 6, y + 20, enabled ? 0xFFFFFFFF : 0xFFC8C8C8, true);
+		drawIcon(g, iconForEntry(entry), x + 6, y + 7, 13);
+		draw(g, trim(name, w - 30), x + 24, y + 7, 0xFFFFFFFF, true);
+		draw(g, enabled ? "On" : "Off", x + 24, y + 20, enabled ? 0xFFFFFFFF : 0xFFC8C8C8, true);
 		toggle(g, x + w - 28, y + h - 13, enabled);
+	}
+
+	private int tabWidth(String tab) {
+		return switch (tab) {
+			case "HUD Editor" -> 88;
+			case "Profiles" -> 72;
+			case "About" -> 64;
+			default -> 62;
+		};
+	}
+
+	private Identifier tabIcon(String tab) {
+		return switch (tab) {
+			case "HUD Editor" -> ICON_TAB_HUD_EDITOR;
+			case "Profiles" -> ICON_TAB_PROFILES;
+			case "About" -> ICON_TAB_ABOUT;
+			default -> ICON_TAB_MODS;
+		};
+	}
+
+	private Identifier filterIcon(String filter) {
+		return switch (filter) {
+			case "HUD" -> ICON_FILTER_HUD;
+			case "Vanilla" -> ICON_FILTER_VANILLA;
+			case "Items" -> ICON_FILTER_ITEMS;
+			case "Info" -> ICON_FILTER_INFO;
+			default -> ICON_FILTER_ALL;
+		};
+	}
+
+	private Identifier iconForEntry(HudEntry entry) {
+		String key = entry.getId().br$getPath().toLowerCase(Locale.ROOT);
+		String name = cleanName(entry).toLowerCase(Locale.ROOT);
+		String combined = key + " " + name;
+		if (combined.contains("fps")) return ICON_FPS;
+		if (combined.contains("cps")) return ICON_CPS;
+		if (combined.contains("keystroke") || combined.contains("toggle") || combined.contains("sprint")) return ICON_KEYSTROKES;
+		if (combined.contains("armor")) return ICON_ARMOR;
+		if (combined.contains("coord")) return ICON_COORDS;
+		if (combined.contains("ping") || combined.contains("ip")) return ICON_PING;
+		if (combined.contains("potion")) return ICON_POTION;
+		if (combined.contains("compass") || combined.contains("direction")) return ICON_DIRECTION;
+		if (combined.contains("item") || combined.contains("inventory") || combined.contains("arrow")) return ICON_ITEMS;
+		if (combined.contains("icon")) return ICON_HUD_ICON;
+		if (combined.contains("speed")) return ICON_SPEED;
+		return ICON_GENERIC;
+	}
+
+	private void drawIcon(GuiGraphics g, Identifier icon, int x, int y, int size) {
+		drawScaledTexture(g, icon, x, y, size, size, 24, 24);
 	}
 
 	private void button(GuiGraphics g, int x, int y, int w, int h, String text, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, w, h);
 		rect(g, x, y, w, h, argb(90, 230, 235, 245), hover ? argb(68, 25, 25, 25) : argb(44, 0, 0, 0));
 		drawCentered(g, text, x, y + (h - 8) / 2, w, 0xFFFFFFFF);
+	}
+
+	private void iconButton(GuiGraphics g, int x, int y, int w, int h, String text, Identifier icon, int mouseX, int mouseY) {
+		boolean hover = inside(mouseX, mouseY, x, y, w, h);
+		rect(g, x, y, w, h, argb(90, 230, 235, 245), hover ? argb(68, 25, 25, 25) : argb(44, 0, 0, 0));
+		drawIcon(g, icon, x + 7, y + 3, 8);
+		draw(g, text, x + 20, y + (h - 8) / 2, 0xFFFFFFFF, true);
 	}
 
 	private void toggle(GuiGraphics g, int x, int y, boolean enabled) {
@@ -206,7 +294,7 @@ public class DurbinClientScreen extends Screen {
 		int tabX = x + 8;
 		int tabY = y + 30;
 		for (String tab : TABS) {
-			int tabW = tab.equals("HUD Editor") ? 78 : 58;
+			int tabW = tabWidth(tab);
 			if (inside(mouseX, mouseY, tabX, tabY, tabW, 15)) {
 				selectedTab = tab;
 				if (tab.equals("HUD Editor")) {
@@ -329,6 +417,15 @@ public class DurbinClientScreen extends Screen {
 
 	private int argb(int a, int r, int g, int b) {
 		return ((a & 255) << 24) | ((r & 255) << 16) | ((g & 255) << 8) | (b & 255);
+	}
+
+	private void drawScaledTexture(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th) {
+		float sx = (float) w / (float) tw;
+		float sy = (float) h / (float) th;
+		g.pose().pushMatrix();
+		g.pose().scale(sx, sy);
+		g.blit(RenderPipelines.GUI_TEXTURED, tex, Math.round(x / sx), Math.round(y / sy), 0, 0, tw, th, tw, th);
+		g.pose().popMatrix();
 	}
 
 	private Component uiText(String text) {
