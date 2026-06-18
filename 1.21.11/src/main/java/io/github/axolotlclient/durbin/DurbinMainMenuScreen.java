@@ -52,6 +52,7 @@ public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier SETTINGS = id("icon_settings.png");
 	private static final Identifier EXIT = id("icon_exit.png");
 	private static final Identifier DISCORD = id("icon_discord.png");
+	private static final Identifier YOUTUBE = id("icon_youtube.png");
 	private static final Identifier LANGUAGE = id("icon_language.png");
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
@@ -59,7 +60,7 @@ public class DurbinMainMenuScreen extends Screen {
 
 	private int singleX, singleY, singleW, singleH;
 	private int multiX, multiY, multiW, multiH;
-	private int settingsX, exitX, discordX, langX, iconY, iconSize;
+	private int settingsX, exitX, discordX, youtubeX, langX, iconY, iconSize;
 	private int closeX, closeY, closeSize;
 	private int accountX, accountY, accountSize;
 	private int promoX, promoY, promoW, promoH;
@@ -92,11 +93,9 @@ public class DurbinMainMenuScreen extends Screen {
 		layout();
 
 		float anim = openProgress();
-		int introDrop = (int) ((1.0F - anim) * 18.0F);
 		int introRise = (int) ((1.0F - anim) * 22.0F);
-		int bob = (int) (Math.sin(System.currentTimeMillis() / 620.0D) * 2.0D);
 
-		drawAnimatedPanorama(g);
+		drawSmoothPanorama(g);
 		g.fill(0, 0, this.width, this.height, argb(130, 0, 0, 0));
 		g.fill(0, 0, this.width, 55, argb(35, 0, 0, 0));
 		g.fill(0, this.height - 70, this.width, this.height, argb(65, 0, 0, 0));
@@ -104,7 +103,7 @@ public class DurbinMainMenuScreen extends Screen {
 		int logoW = Math.max(110, Math.min(160, this.width / 5));
 		int logoH = logoW * 236 / 376;
 		int logoX = (this.width - logoW) / 2;
-		int logoY = Math.max(22, this.height / 2 - 130) - introDrop + bob;
+		int logoY = Math.max(22, this.height / 2 - 130);
 		drawScaledTexture(g, LOGO, logoX, logoY, logoW, logoH, 376, 236);
 
 		drawImageButton(g, SINGLE, singleX, singleY + introRise, singleW, singleH, 784, 64, inside(mouseX, mouseY, singleX, singleY, singleW, singleH));
@@ -114,11 +113,12 @@ public class DurbinMainMenuScreen extends Screen {
 		drawIconButton(g, SETTINGS, settingsX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, EXIT, exitX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, DISCORD, discordX, iconY + iconSlide, iconSize, mouseX, mouseY);
+		drawIconButton(g, YOUTUBE, youtubeX, iconY + iconSlide, iconSize, mouseX, mouseY);
 		drawIconButton(g, LANGUAGE, langX, iconY + iconSlide, iconSize, mouseX, mouseY);
-		drawIconButton(g, ACCOUNT, accountX, accountY - introDrop, accountSize, mouseX, mouseY);
-		drawIconButton(g, CLOSE, closeX, closeY - introDrop, closeSize, mouseX, mouseY);
+		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
+		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
 
-		drawScaledTexture(g, PROMO, promoX + (int) ((1.0F - anim) * 28.0F), promoY + bob, promoW, promoH, 382, 178);
+		drawPromoPanel(g, mouseX, mouseY);
 
 		if (anim < 1.0F) {
 			g.fill(0, 0, this.width, this.height, argb((int) ((1.0F - anim) * 120.0F), 0, 0, 0));
@@ -140,13 +140,14 @@ public class DurbinMainMenuScreen extends Screen {
 
 		this.iconSize = Math.max(22, Math.min(32, this.width / 32));
 		int gap = Math.max(8, iconSize / 3);
-		int total = iconSize * 4 + gap * 3;
+		int total = iconSize * 5 + gap * 4;
 		this.iconY = this.height - Math.max(44, this.height / 12);
 		int startX = (this.width - total) / 2;
 		this.settingsX = startX;
 		this.exitX = startX + iconSize + gap;
 		this.discordX = startX + (iconSize + gap) * 2;
-		this.langX = startX + (iconSize + gap) * 3;
+		this.youtubeX = startX + (iconSize + gap) * 3;
+		this.langX = startX + (iconSize + gap) * 4;
 
 		this.closeSize = Math.max(18, Math.min(28, this.width / 45));
 		this.closeX = this.width - closeSize - 12;
@@ -161,19 +162,25 @@ public class DurbinMainMenuScreen extends Screen {
 		this.promoY = this.height - promoH - 46;
 	}
 
-	private void drawAnimatedPanorama(GuiGraphics g) {
+	private void drawSmoothPanorama(GuiGraphics g) {
+		// Stable panorama: use one face as a clean background and move it very slowly.
+		// Cycling cube faces as full-screen 2D images looked glitchy, so this keeps it smooth.
 		long now = System.currentTimeMillis();
-		int current = (int) ((now / 4500L) % PANORAMA.length);
-		int next = (current + 1) % PANORAMA.length;
-		float fade = (now % 4500L) / 4500.0F;
-		int pan = (int) ((now / 45L) % Math.max(1, this.width / 10));
+		int travel = Math.max(20, this.width / 26);
+		int offX = (int) (Math.sin(now / 9000.0D) * travel);
+		int offY = (int) (Math.cos(now / 12000.0D) * Math.max(8, this.height / 70));
+		drawCover(g, PANORAMA[0], offX - travel, offY - 12, this.width + travel * 2, this.height + 24, 1024, 1024);
+	}
 
-		drawCoverOffset(g, PANORAMA[current], -pan, 0, this.width + this.width / 10, this.height, 1046, 1046);
-		if (fade > 0.65F) {
-			int alpha = Math.min(95, (int) ((fade - 0.65F) / 0.35F * 95));
-			drawCoverOffset(g, PANORAMA[next], -pan / 2, 0, this.width + this.width / 12, this.height, 1046, 1046);
-			g.fill(0, 0, this.width, this.height, argb(95 - alpha, 0, 0, 0));
+	private void drawPromoPanel(GuiGraphics g, int mouseX, int mouseY) {
+		boolean hover = inside(mouseX, mouseY, promoX, promoY, promoW, promoH);
+		drawScaledTexture(g, PROMO, promoX, promoY, promoW, promoH, 382, 178);
+		if (hover) {
+			g.fill(promoX, promoY, promoX + promoW, promoY + promoH, argb(24, 255, 255, 255));
 		}
+		int badge = Math.max(16, promoH / 4);
+		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 64, 64);
+		drawTiny(g, "YouTube", promoX + 8, promoY + promoH - 12, 0xDDFFFFFF);
 	}
 
 	private void drawCoverOffset(GuiGraphics g, Identifier texture, int offX, int offY, int w, int h, int tw, int th) {
@@ -257,6 +264,11 @@ public class DurbinMainMenuScreen extends Screen {
 		if (inside(mouseX, mouseY, discordX, iconY, iconSize, iconSize)) {
 			playClick();
 			openUrl("https://discord.gg/PqnbXNrtHR");
+			return true;
+		}
+		if (inside(mouseX, mouseY, youtubeX, iconY, iconSize, iconSize) || inside(mouseX, mouseY, promoX, promoY, promoW, promoH)) {
+			playClick();
+			openUrl("https://www.youtube.com/@Cosa_5023_YT");
 			return true;
 		}
 		if (inside(mouseX, mouseY, langX, iconY, iconSize, iconSize)) {
