@@ -76,6 +76,7 @@ public class DurbinClientScreen extends Screen {
 	private final Screen parent;
 	private String selectedTab = "Mods";
 	private String selectedFilter = "All";
+	private final long openedAt = System.currentTimeMillis();
 
 	public DurbinClientScreen(Screen parent) {
 		super(Component.literal("Durbin Client"));
@@ -87,6 +88,11 @@ public class DurbinClientScreen extends Screen {
 		return false;
 	}
 
+	private float openProgress() {
+		float raw = Math.min(1.0F, (System.currentTimeMillis() - openedAt) / 420.0F);
+		return raw * raw * (3.0F - 2.0F * raw);
+	}
+
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 		super.render(graphics, mouseX, mouseY, delta);
@@ -94,7 +100,7 @@ public class DurbinClientScreen extends Screen {
 		int panelW = Math.min(430, width - 34);
 		int panelH = Math.min(226, height - 34);
 		int x = (width - panelW) / 2;
-		int y = (height - panelH) / 2;
+		int y = (height - panelH) / 2 + (int) ((1.0F - openProgress()) * 10.0F);
 
 		fill(graphics, 0, 0, width, height, argb(18, 0, 0, 0));
 
@@ -199,8 +205,11 @@ public class DurbinClientScreen extends Screen {
 
 	private void renderHudCard(GuiGraphics g, HudEntry entry, int x, int y, int w, int h, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, w, h);
+		if (hover) {
+			y -= 1;
+		}
 		boolean enabled = entry.isEnabled();
-		int fill = enabled ? argb(108, 0, 0, 0) : hover ? argb(62, 20, 20, 20) : argb(44, 0, 0, 0);
+		int fill = enabled ? argb(108, 0, 0, 0) : hover ? argb(74, 20, 20, 20) : argb(44, 0, 0, 0);
 		rect(g, x, y, w, h, enabled ? argb(96, 255, 255, 255) : argb(56, 230, 235, 245), fill);
 		String name = cleanName(entry);
 		drawIcon(g, iconForEntry(entry), x + 6, y + 7, 13);

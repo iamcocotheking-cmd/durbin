@@ -29,7 +29,11 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +42,10 @@ import java.awt.Desktop;
 import java.net.URI;
 
 public class DurbinMainMenuScreen extends Screen {
-	private static final Identifier BG = id("panorama_0.png");
+	private static final Identifier[] PANORAMA = {
+		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
+		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
+	};
 	private static final Identifier LOGO = id("logo_main.png");
 	private static final Identifier SINGLE = id("button_singleplayer.png");
 	private static final Identifier MULTI = id("button_multiplayer.png");
@@ -56,6 +63,7 @@ public class DurbinMainMenuScreen extends Screen {
 	private int closeX, closeY, closeSize;
 	private int accountX, accountY, accountSize;
 	private int promoX, promoY, promoW, promoH;
+	private final long openedAt = System.currentTimeMillis();
 
 	public DurbinMainMenuScreen() {
 		super(Component.literal("Durbin Client Main Menu"));
@@ -70,12 +78,25 @@ public class DurbinMainMenuScreen extends Screen {
 		return false;
 	}
 
+	private float openProgress() {
+		return smooth(Math.min(1.0F, (System.currentTimeMillis() - openedAt) / 650.0F));
+	}
+
+	private float smooth(float value) {
+		return value * value * (3.0F - 2.0F * value);
+	}
+
 	@Override
 	public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float delta) {
 		super.render(g, mouseX, mouseY, delta);
 		layout();
 
-		drawCover(g, BG, 0, 0, this.width, this.height, 1046, 1046);
+		float anim = openProgress();
+		int introDrop = (int) ((1.0F - anim) * 18.0F);
+		int introRise = (int) ((1.0F - anim) * 22.0F);
+		int bob = (int) (Math.sin(System.currentTimeMillis() / 620.0D) * 2.0D);
+
+		drawAnimatedPanorama(g);
 		g.fill(0, 0, this.width, this.height, argb(130, 0, 0, 0));
 		g.fill(0, 0, this.width, 55, argb(35, 0, 0, 0));
 		g.fill(0, this.height - 70, this.width, this.height, argb(65, 0, 0, 0));
@@ -83,20 +104,25 @@ public class DurbinMainMenuScreen extends Screen {
 		int logoW = Math.max(110, Math.min(160, this.width / 5));
 		int logoH = logoW * 236 / 376;
 		int logoX = (this.width - logoW) / 2;
-		int logoY = Math.max(22, this.height / 2 - 130);
+		int logoY = Math.max(22, this.height / 2 - 130) - introDrop + bob;
 		drawScaledTexture(g, LOGO, logoX, logoY, logoW, logoH, 376, 236);
 
-		drawImageButton(g, SINGLE, singleX, singleY, singleW, singleH, 784, 64, inside(mouseX, mouseY, singleX, singleY, singleW, singleH));
-		drawImageButton(g, MULTI, multiX, multiY, multiW, multiH, 784, 64, inside(mouseX, mouseY, multiX, multiY, multiW, multiH));
+		drawImageButton(g, SINGLE, singleX, singleY + introRise, singleW, singleH, 784, 64, inside(mouseX, mouseY, singleX, singleY, singleW, singleH));
+		drawImageButton(g, MULTI, multiX, multiY + introRise, multiW, multiH, 784, 64, inside(mouseX, mouseY, multiX, multiY, multiW, multiH));
 
-		drawIconButton(g, SETTINGS, settingsX, iconY, iconSize, mouseX, mouseY);
-		drawIconButton(g, EXIT, exitX, iconY, iconSize, mouseX, mouseY);
-		drawIconButton(g, DISCORD, discordX, iconY, iconSize, mouseX, mouseY);
-		drawIconButton(g, LANGUAGE, langX, iconY, iconSize, mouseX, mouseY);
-		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
-		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
+		int iconSlide = (int) ((1.0F - anim) * 16.0F);
+		drawIconButton(g, SETTINGS, settingsX, iconY + iconSlide, iconSize, mouseX, mouseY);
+		drawIconButton(g, EXIT, exitX, iconY + iconSlide, iconSize, mouseX, mouseY);
+		drawIconButton(g, DISCORD, discordX, iconY + iconSlide, iconSize, mouseX, mouseY);
+		drawIconButton(g, LANGUAGE, langX, iconY + iconSlide, iconSize, mouseX, mouseY);
+		drawIconButton(g, ACCOUNT, accountX, accountY - introDrop, accountSize, mouseX, mouseY);
+		drawIconButton(g, CLOSE, closeX, closeY - introDrop, closeSize, mouseX, mouseY);
 
-		drawScaledTexture(g, PROMO, promoX, promoY, promoW, promoH, 382, 178);
+		drawScaledTexture(g, PROMO, promoX + (int) ((1.0F - anim) * 28.0F), promoY + bob, promoW, promoH, 382, 178);
+
+		if (anim < 1.0F) {
+			g.fill(0, 0, this.width, this.height, argb((int) ((1.0F - anim) * 120.0F), 0, 0, 0));
+		}
 
 		drawTiny(g, "Durbin Client 1.21.11", 6, this.height - 10, 0x66FFFFFF);
 		drawTiny(g, "Copyright COSA", this.width - 62, this.height - 10, 0x66FFFFFF);
@@ -135,6 +161,25 @@ public class DurbinMainMenuScreen extends Screen {
 		this.promoY = this.height - promoH - 46;
 	}
 
+	private void drawAnimatedPanorama(GuiGraphics g) {
+		long now = System.currentTimeMillis();
+		int current = (int) ((now / 4500L) % PANORAMA.length);
+		int next = (current + 1) % PANORAMA.length;
+		float fade = (now % 4500L) / 4500.0F;
+		int pan = (int) ((now / 45L) % Math.max(1, this.width / 10));
+
+		drawCoverOffset(g, PANORAMA[current], -pan, 0, this.width + this.width / 10, this.height, 1046, 1046);
+		if (fade > 0.65F) {
+			int alpha = Math.min(95, (int) ((fade - 0.65F) / 0.35F * 95));
+			drawCoverOffset(g, PANORAMA[next], -pan / 2, 0, this.width + this.width / 12, this.height, 1046, 1046);
+			g.fill(0, 0, this.width, this.height, argb(95 - alpha, 0, 0, 0));
+		}
+	}
+
+	private void drawCoverOffset(GuiGraphics g, Identifier texture, int offX, int offY, int w, int h, int tw, int th) {
+		drawCover(g, texture, offX, offY, w, h, tw, th);
+	}
+
 	private void drawCover(GuiGraphics g, Identifier texture, int x, int y, int w, int h, int tw, int th) {
 		float targetRatio = (float) w / (float) h;
 		float sourceRatio = (float) tw / (float) th;
@@ -153,17 +198,19 @@ public class DurbinMainMenuScreen extends Screen {
 	}
 
 	private void drawImageButton(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th, boolean hover) {
-		drawScaledTexture(g, tex, x, y, w, h, tw, th);
+		int grow = hover ? 3 : 0;
+		drawScaledTexture(g, tex, x - grow, y - grow / 2, w + grow * 2, h + grow, tw, th);
 		if (hover) {
-			g.fill(x, y, x + w, y + h, argb(26, 255, 255, 255));
+			g.fill(x - grow, y - grow / 2, x + w + grow, y + h + grow / 2, argb(30, 255, 255, 255));
 		}
 	}
 
 	private void drawIconButton(GuiGraphics g, Identifier tex, int x, int y, int size, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, size, size);
-		g.fill(x, y, x + size, y + size, hover ? argb(120, 255, 255, 255) : argb(70, 255, 255, 255));
-		int pad = Math.max(4, size / 5);
-		drawScaledTexture(g, tex, x + pad, y + pad, size - pad * 2, size - pad * 2, 64, 64);
+		int drawSize = hover ? size + 2 : size;
+		int drawX = hover ? x - 1 : x;
+		int drawY = hover ? y - 1 : y;
+		drawScaledTexture(g, tex, drawX, drawY, drawSize, drawSize, 64, 64);
 	}
 
 	private void drawScaledTexture(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th) {
@@ -187,26 +234,33 @@ public class DurbinMainMenuScreen extends Screen {
 		double mouseX = event.x();
 		double mouseY = event.y();
 		if (inside(mouseX, mouseY, singleX, singleY, singleW, singleH)) {
+			playClick();
 			minecraft.setScreen(new SelectWorldScreen(this));
 			return true;
 		}
 		if (inside(mouseX, mouseY, multiX, multiY, multiW, multiH)) {
+			playClick();
+			ensurePortalBdServer();
 			minecraft.setScreen(new JoinMultiplayerScreen(this));
 			return true;
 		}
 		if (inside(mouseX, mouseY, settingsX, iconY, iconSize, iconSize)) {
+			playClick();
 			minecraft.setScreen(new OptionsScreen(this, minecraft.options));
 			return true;
 		}
 		if (inside(mouseX, mouseY, exitX, iconY, iconSize, iconSize) || inside(mouseX, mouseY, closeX, closeY, closeSize, closeSize)) {
+			playClick();
 			minecraft.stop();
 			return true;
 		}
 		if (inside(mouseX, mouseY, discordX, iconY, iconSize, iconSize)) {
+			playClick();
 			openUrl("https://discord.gg/PqnbXNrtHR");
 			return true;
 		}
 		if (inside(mouseX, mouseY, langX, iconY, iconSize, iconSize)) {
+			playClick();
 			minecraft.setScreen(new LanguageSelectScreen(this, minecraft.options, minecraft.getLanguageManager()));
 			return true;
 		}
@@ -219,6 +273,29 @@ public class DurbinMainMenuScreen extends Screen {
 
 	private int argb(int a, int r, int g, int b) {
 		return ((a & 255) << 24) | ((r & 255) << 16) | ((g & 255) << 8) | (b & 255);
+	}
+
+	private void playClick() {
+		try {
+			minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+		} catch (Exception ignored) {
+		}
+	}
+
+	private void ensurePortalBdServer() {
+		try {
+			ServerList servers = new ServerList(minecraft);
+			servers.load();
+			ServerData existing = servers.get("play.portalbd.fun");
+			if (existing == null) {
+				servers.add(new ServerData("PORTALBD", "play.portalbd.fun", ServerData.Type.OTHER), true);
+			} else {
+				existing.name = "PORTALBD";
+				existing.ip = "play.portalbd.fun";
+			}
+			servers.save();
+		} catch (Exception ignored) {
+		}
 	}
 
 	private void openUrl(String url) {
