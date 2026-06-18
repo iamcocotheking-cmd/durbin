@@ -1,0 +1,16 @@
+Upload the INSIDE of this folder to GitHub, not the parent zip folder.
+
+Repo root should contain:
+.github/
+1.21.11/
+common/
+build.gradle.kts
+settings.gradle
+gradle.properties
+gradlew
+gradle/
+LICENSE
+README.md
+THIRD_PARTY_NOTICES.md
+
+GitHub Actions will build: ./gradlew :1.21.11:build --stacktrace
