@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
-	private static final int PROMO_Y_OFFSET = 34;
 	private static final Identifier[] PANORAMA = {
 		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
 		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
@@ -168,7 +167,7 @@ super.render(g, mouseX, mouseY, delta);
 		this.promoW = Math.max(112, Math.min(182, this.width / 5));
 		this.promoH = promoW * 178 / 382;
 		this.promoX = this.width - promoW - 28;
-		this.promoY = this.height - promoH - 46 + PROMO_Y_OFFSET;
+		this.promoY = this.height - promoH - 46;
 	}
 
 	private void drawSmoothPanorama(GuiGraphics g) {
