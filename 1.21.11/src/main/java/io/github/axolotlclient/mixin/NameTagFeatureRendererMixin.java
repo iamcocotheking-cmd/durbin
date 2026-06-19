@@ -81,7 +81,7 @@ public abstract class NameTagFeatureRendererMixin {
 				var x = nameStartX - 12;
 				var builder = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(TEXTURED_TYPE);
 				Matrix4f matrix4f = submit.pose();
-				// Durbin badge beside the normal nametag, similar to the reference screenshot.
+				// Durbin badge beside the normal player nametag.
 				builder.addVertex(matrix4f, x, -1, 0).setUv(0, 0).setColor(-1);
 				builder.addVertex(matrix4f, x, 9, 0).setUv(0, 1).setColor(-1);
 				builder.addVertex(matrix4f, x + 10, 9, 0).setUv(1, 1).setColor(-1);
