@@ -1,6 +1,0 @@
-Final polish pass:
-- softened GUI borders / transparency
-- reduced heavy panorama movement if present
-- kept Badlion-style mods layout
-- kept icons and Durbin branding
-- kept PortalBD server/resource pack/menu additions

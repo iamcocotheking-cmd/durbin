@@ -1,0 +1,5 @@
+Fixed panorama resource pack:
+- your Durbin_Panorama_Pack is embedded into mod resources
+- pack is copied to .minecraft/resourcepacks automatically
+- fake generated panorama/cycling disabled to stop lag/glitch
+- uses the resource pack panorama files instead

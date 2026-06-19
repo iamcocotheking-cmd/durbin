@@ -1,0 +1,1 @@
+This version copies Durbin_Panorama_Pack.zip into .minecraft/resourcepacks and also edits options.txt to enable it as file/Durbin_Panorama_Pack.zip. Minecraft may need one restart after first run to fully show it in the Resource Packs list as enabled. The custom main menu also embeds the panorama directly so it should show even without manual selection.

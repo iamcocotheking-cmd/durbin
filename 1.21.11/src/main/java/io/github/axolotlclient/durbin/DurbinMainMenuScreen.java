@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
+	private static final int PROMO_Y_OFFSET = 34;
 	private static final Identifier[] PANORAMA = {
 		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
 		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
@@ -96,7 +97,9 @@ public class DurbinMainMenuScreen extends Screen {
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.render(g, mouseX, mouseY, delta);
+		
+		DurbinPanoramaPackInstaller.install();
+super.render(g, mouseX, mouseY, delta);
 		ensureDurbinPanoramaPackInstalled();
 		layout();
 
@@ -165,7 +168,7 @@ public class DurbinMainMenuScreen extends Screen {
 		this.promoW = Math.max(112, Math.min(182, this.width / 5));
 		this.promoH = promoW * 178 / 382;
 		this.promoX = this.width - promoW - 28;
-		this.promoY = this.height - promoH - 46;
+		this.promoY = this.height - promoH - 46 + PROMO_Y_OFFSET;
 	}
 
 	private void drawSmoothPanorama(GuiGraphics g) {
@@ -181,7 +184,7 @@ public class DurbinMainMenuScreen extends Screen {
 			g.fill(promoX, promoY, promoX + promoW, promoY + promoH, argb(24, 255, 255, 255));
 		}
 		int badge = Math.max(16, promoH / 4);
-		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 48, 48);
+		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 64, 64);
 		drawTiny(g, "YouTube", promoX + 8, promoY + promoH - 12, 0xDDFFFFFF);
 	}
 
@@ -219,7 +222,7 @@ public class DurbinMainMenuScreen extends Screen {
 		int drawSize = hover ? size + 2 : size;
 		int drawX = hover ? x - 1 : x;
 		int drawY = hover ? y - 1 : y;
-		drawScaledTexture(g, tex, drawX, drawY, drawSize, drawSize, 48, 48);
+		drawScaledTexture(g, tex, drawX, drawY, drawSize, drawSize, 64, 64);
 	}
 
 	private void drawScaledTexture(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th) {
