@@ -27,8 +27,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.axolotlclient.AxolotlClient;
-import io.github.axolotlclient.api.requests.UserRequest;
-import io.github.axolotlclient.durbin.nametags.DurbinNameTags;
 import io.github.axolotlclient.modules.hypixel.LevelHead;
 import io.github.axolotlclient.modules.hypixel.NickHider;
 import io.github.axolotlclient.modules.hypixel.bedwars.BedwarsMod;
@@ -44,7 +42,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -77,13 +74,14 @@ public abstract class EntityRendererMixin {
 
 	@Inject(method = "submitNameTag(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitNameTag(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/phys/Vec3;ILnet/minecraft/network/chat/Component;ZIDLnet/minecraft/client/renderer/state/CameraRenderState;)V", ordinal = 1, shift = At.Shift.AFTER))
 	public void axolotlclient$addBadges(AvatarRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
-		if (!state.isDiscrete) {
-			if (AxolotlClient.config().showBadges.get()) {
-				Entity entity = Minecraft.getInstance().level.getEntity(state.id);
-				if (entity instanceof Player player && UserRequest.getOnline(player.getStringUUID())) {
-					((SubmitNodeCollectorExtension) submitNodeCollector).axolotlclient$lastNameTagSubmitHasBadge();
-				}
-			}
+		if (state.isDiscrete || !AxolotlClient.config().showBadges.get() || Minecraft.getInstance().level == null) {
+			return;
+		}
+
+		Entity entity = Minecraft.getInstance().level.getEntity(state.id);
+		if (entity instanceof Player) {
+			// Durbin: show the local badge image beside normal player nametags.
+			((SubmitNodeCollectorExtension) submitNodeCollector).axolotlclient$lastNameTagSubmitHasBadge();
 		}
 	}
 
@@ -124,13 +122,5 @@ public abstract class EntityRendererMixin {
 			}
 		}
 
-		List<Component> durbinLines = DurbinNameTags.getInstance().getComponentsFor(player.getScoreboardName());
-		if (!durbinLines.isEmpty()) {
-			int baseY = state.showExtraEars ? -20 : -10;
-			for (int line = 0; line < durbinLines.size(); line++) {
-				int y = baseY - ((durbinLines.size() - 1 - line) * 10);
-				submitNodeCollector.submitNameTag(poseStack, state.nameTagAttachment, y, durbinLines.get(line), !state.isDiscrete, state.lightCoords, state.distanceToCameraSq, cameraRenderState);
-			}
-		}
 	}
 }

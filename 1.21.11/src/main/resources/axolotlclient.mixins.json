@@ -52,6 +52,7 @@
 		"PlayerListEntryMixin",
 		"PlayerListHudMixin",
 		"PlayerMixin",
+		"PortalBDMultiplayerScreenMixin",
 		"PostPassMixin",
 		"ReloadableResourceManagerMixin",
 		"ScreenMixin",

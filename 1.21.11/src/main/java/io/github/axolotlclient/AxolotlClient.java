@@ -29,7 +29,6 @@ import io.github.axolotlclient.api.APIOptions;
 import io.github.axolotlclient.api.Options;
 import io.github.axolotlclient.api.StatusUpdateProviderImpl;
 import io.github.axolotlclient.bridge.impl.Bridge;
-import io.github.axolotlclient.durbin.nametags.DurbinNameTags;
 import io.github.axolotlclient.modules.ModuleLoader;
 import io.github.axolotlclient.modules.auth.Auth;
 import io.github.axolotlclient.modules.blur.MotionBlur;
@@ -72,7 +71,6 @@ public class AxolotlClient extends AxolotlClientCommon implements ClientModIniti
 
 		init(Notifications.getInstance());
 		new API(new StatusUpdateProviderImpl());
-		DurbinNameTags.getInstance().init();
 
 		getLogger().debug("Debug Output enabled, Logs will be quite verbose!");
 		getLogger().info("AxolotlClient Initialized");

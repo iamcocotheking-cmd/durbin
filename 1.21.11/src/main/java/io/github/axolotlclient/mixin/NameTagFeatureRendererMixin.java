@@ -56,12 +56,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(NameTagFeatureRenderer.class)
 public abstract class NameTagFeatureRendererMixin {
 	@Unique
+	private static final Identifier DURBIN_NAMETAG_BADGE = Identifier.fromNamespaceAndPath(AxolotlClientCommon.MODID, "textures/durbin/ui/nametag_badge.png");
+
+	@Unique
 	private static final RenderType TEXTURED_TYPE = RenderType.create("axolotlclient_textured_quads", RenderSetup.builder(
 			RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
 				.withLocation(Identifier.fromNamespaceAndPath(AxolotlClientCommon.MODID, "pipeline/badge"))
 				.withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST).build())
 		.bufferSize(1536)
-		.withTexture("Sampler0", (Identifier) AxolotlClientCommon.BADGE_PATH)
+		.withTexture("Sampler0", DURBIN_NAMETAG_BADGE)
 		.setTextureTransform(TextureTransform.DEFAULT_TEXTURING)
 		.createRenderSetup());
 
@@ -75,13 +78,14 @@ public abstract class NameTagFeatureRendererMixin {
 				var x = nameStartX - (font.width(badgeText) + 4);
 				Minecraft.getInstance().font.drawInBatch(badgeText, x, 0, -1, AxolotlClient.config().useShadows.get(), submit.pose(), bufferSource, Font.DisplayMode.NORMAL, 0, 15728880);
 			} else {
-				var x = nameStartX - 10;
+				var x = nameStartX - 12;
 				var builder = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(TEXTURED_TYPE);
 				Matrix4f matrix4f = submit.pose();
-				builder.addVertex(matrix4f, x, 0, 0).setUv(0, 0).setColor(-1);
-				builder.addVertex(matrix4f, x, 8, 0).setUv(0, 1).setColor(-1);
-				builder.addVertex(matrix4f, x + 8, 8, 0).setUv(1, 1).setColor(-1);
-				builder.addVertex(matrix4f, x + 8, 0, 0).setUv(1, 0).setColor(-1);
+				// Durbin badge beside the normal nametag, similar to the reference screenshot.
+				builder.addVertex(matrix4f, x, -1, 0).setUv(0, 0).setColor(-1);
+				builder.addVertex(matrix4f, x, 9, 0).setUv(0, 1).setColor(-1);
+				builder.addVertex(matrix4f, x + 10, 9, 0).setUv(1, 1).setColor(-1);
+				builder.addVertex(matrix4f, x + 10, -1, 0).setUv(1, 0).setColor(-1);
 				Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
 			}
 		}
