@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
+	private static final int PROMO_Y_OFFSET = 34;
 	private static final Identifier[] PANORAMA = {
 		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
 		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
@@ -60,7 +61,7 @@ public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier LANGUAGE = id("icon_language.png");
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
-	private static final Identifier PROMO = id("promo_card.png");
+	private static final Identifier UNUSED_PROMO = id("promo_card.png");
 	private static final String BUNDLED_PACK_PATH = "/assets/axolotlclient/resourcepacks/Durbin_Panorama_Pack.zip";
 	private static final String PACK_FILE_NAME = "Durbin_Panorama_Pack.zip";
 
@@ -167,7 +168,7 @@ super.render(g, mouseX, mouseY, delta);
 		this.promoW = Math.max(112, Math.min(182, this.width / 5));
 		this.promoH = promoW * 178 / 382;
 		this.promoX = this.width - promoW - 28;
-		this.promoY = this.height - promoH - 46;
+		this.promoY = this.height - promoH - 46 + PROMO_Y_OFFSET;
 	}
 
 	private void drawSmoothPanorama(GuiGraphics g) {
@@ -270,11 +271,7 @@ super.render(g, mouseX, mouseY, delta);
 			openUrl("https://discord.gg/PqnbXNrtHR");
 			return true;
 		}
-		if (inside(mouseX, mouseY, promoX, promoY, promoW, promoH)) {
-			playClick();
-			openUrl("https://www.youtube.com/@Cosa_5023_YT");
-			return true;
-		}
+		
 		if (inside(mouseX, mouseY, langX, iconY, iconSize, iconSize)) {
 			playClick();
 			minecraft.setScreen(new LanguageSelectScreen(this, minecraft.options, minecraft.getLanguageManager()));

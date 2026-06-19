@@ -23,6 +23,7 @@
 package io.github.axolotlclient.durbin;
 
 import io.github.axolotlclient.config.screen.ProfilesScreen;
+import io.github.axolotlclient.durbin.nametags.DurbinNameTags;
 import io.github.axolotlclient.modules.hud.HudEditScreen;
 import io.github.axolotlclient.modules.hud.HudManager;
 import io.github.axolotlclient.modules.hud.gui.component.HudEntry;
@@ -68,7 +69,7 @@ public class DurbinClientScreen extends Screen {
 	private static final Identifier ICON_SPEED = uiIcon("hud_speed.png");
 	private static final Identifier ICON_GENERIC = uiIcon("hud_generic.png");
 
-	private static final String[] TABS = {"Mods", "HUD Editor", "Profiles", "About"};
+	private static final String[] TABS = {"Mods", "Nametags", "HUD Editor", "Profiles", "About"};
 	private static final String[] FILTERS = {"All", "HUD", "Vanilla", "Items", "Info"};
 
 	private static Identifier uiIcon(String name) {
@@ -96,7 +97,7 @@ public class DurbinClientScreen extends Screen {
 	}
 
 	private int panelW() {
-		return Math.min(520, width - 34);
+		return Math.min(570, width - 34);
 	}
 
 	private int panelH() {
@@ -159,11 +160,13 @@ public class DurbinClientScreen extends Screen {
 			tabX += tabW + 5;
 		}
 
-		int searchW = 115;
+		int searchW = 95;
 		int searchX = x + panelW - searchW - 8;
-		rect(g, searchX, tabY, searchW, 18, argb(90, 95, 108, 128), argb(80, 8, 12, 18));
-		drawIcon(g, ICON_SEARCH, searchX + 7, tabY + 4, 9);
-		draw(g, "Search...", searchX + 22, tabY + 5, 0xFFBFC6D2, true);
+		if (tabX + 6 < searchX) {
+			rect(g, searchX, tabY, searchW, 18, argb(90, 95, 108, 128), argb(80, 8, 12, 18));
+			drawIcon(g, ICON_SEARCH, searchX + 7, tabY + 4, 9);
+			draw(g, "Search...", searchX + 22, tabY + 5, 0xFFBFC6D2, true);
+		}
 	}
 
 	private void renderLeft(GuiGraphics g, int x, int y, int panelH, int mouseX, int mouseY) {
@@ -192,6 +195,10 @@ public class DurbinClientScreen extends Screen {
 		int by = y + 63;
 		int bw = panelW - 124;
 
+		if (selectedTab.equals("Nametags")) {
+			renderNametagsPage(g, bx, by, bw, mouseX, mouseY);
+			return;
+		}
 		if (selectedTab.equals("HUD Editor")) {
 			draw(g, "HUD Editor", bx, by, 0xFFFFFFFF, true);
 			draw(g, "Move, resize and configure real Axolotl HUD entries.", bx, by + 14, 0xFFD0D0D0, true);
@@ -237,6 +244,31 @@ public class DurbinClientScreen extends Screen {
 		}
 	}
 
+	private void renderNametagsPage(GuiGraphics g, int bx, int by, int bw, int mouseX, int mouseY) {
+		DurbinNameTags tags = DurbinNameTags.getInstance();
+		draw(g, "Firebase Nametags", bx, by, 0xFFFFFFFF, true);
+		draw(g, "Colored client-side lines above player names.", bx, by + 14, 0xFFD0D0D0, true);
+
+		int cardY = by + 34;
+		rect(g, bx, cardY, bw, 72, argb(75, 105, 116, 136), argb(52, 18, 24, 32));
+		draw(g, "Enabled", bx + 10, cardY + 10, 0xFFFFFFFF, true);
+		toggle(g, bx + 72, cardY + 10, tags.isEnabled());
+		button(g, bx + 110, cardY + 5, 78, 20, "Sync Now", mouseX, mouseY);
+		draw(g, "Status: " + trim(tags.statusText(), bw - 20), bx + 10, cardY + 32, 0xFFD0D0D0, true);
+		draw(g, "Players: " + tags.playerCount() + "   Last sync: " + tags.lastSyncText(), bx + 10, cardY + 48, 0xFFBFC6D2, true);
+
+		int infoY = cardY + 85;
+		rect(g, bx, infoY, bw, 84, argb(65, 105, 116, 136), argb(45, 12, 16, 22));
+		draw(g, "Firebase URL: " + tags.shortFirebaseUrl(), bx + 10, infoY + 10, 0xFFE9EEF6, true);
+		draw(g, "Edit config/durbin-nametags.properties", bx + 10, infoY + 26, 0xFFD0D0D0, true);
+		draw(g, "Cache: config/durbin-nametags-cache.json", bx + 10, infoY + 42, 0xFFD0D0D0, true);
+		draw(g, "Offline mode uses the cache automatically.", bx + 10, infoY + 58, 0xFFBFC6D2, true);
+
+		int previewY = infoY + 98;
+		draw(g, "Example Firebase lines:", bx, previewY, 0xFFFFFFFF, true);
+		draw(g, "COSA -> blue owner / green member / red clan", bx, previewY + 14, 0xFFBFC6D2, true);
+	}
+
 	private void renderLargeCard(GuiGraphics g, HudEntry entry, int x, int y, int w, int h, int mouseX, int mouseY) {
 		boolean hover = inside(mouseX, mouseY, x, y, w, h);
 		if (hover) {
@@ -258,6 +290,7 @@ public class DurbinClientScreen extends Screen {
 	private int tabWidth(String tab) {
 		return switch (tab) {
 			case "HUD Editor" -> 94;
+			case "Nametags" -> 88;
 			case "Profiles" -> 78;
 			case "About" -> 70;
 			default -> 72;
@@ -267,6 +300,7 @@ public class DurbinClientScreen extends Screen {
 	private Identifier tabIcon(String tab) {
 		return switch (tab) {
 			case "HUD Editor" -> ICON_TAB_HUD_EDITOR;
+			case "Nametags" -> ICON_GENERIC;
 			case "Profiles" -> ICON_TAB_PROFILES;
 			case "About" -> ICON_TAB_ABOUT;
 			default -> ICON_TAB_MODS;
@@ -370,6 +404,20 @@ public class DurbinClientScreen extends Screen {
 			return true;
 		}
 
+		if (selectedTab.equals("Nametags")) {
+			int bx = x + 112;
+			int by = y + 63;
+			int cardY = by + 34;
+			if (inside(mouseX, mouseY, bx + 72, cardY + 10, 22, 9)) {
+				DurbinNameTags.getInstance().toggleEnabled();
+				return true;
+			}
+			if (inside(mouseX, mouseY, bx + 110, cardY + 5, 78, 20)) {
+				DurbinNameTags.getInstance().refreshNow();
+				return true;
+			}
+		}
+
 		if (selectedTab.equals("HUD Editor")) {
 			int bx = x + 112;
 			int by = y + 63;
@@ -387,6 +435,11 @@ public class DurbinClientScreen extends Screen {
 			}
 		}
 
+		if (motionBlurAt(mouseX, mouseY, x, y, panelW)) {
+			DurbinMotionBlur.toggle();
+			return true;
+		}
+
 		HudEntry clicked = hudAt(mouseX, mouseY, x, y, panelW);
 		if (clicked != null) {
 			clicked.setEnabled(!clicked.isEnabled());
@@ -394,6 +447,20 @@ public class DurbinClientScreen extends Screen {
 		}
 
 		return super.mouseClicked(event, doubleClick);
+	}
+
+	private boolean motionBlurAt(double mouseX, double mouseY, int x, int y, int panelW) {
+		if (!selectedTab.equals("Mods")) return false;
+		int bx = x + 100;
+		int by = y + 55;
+		int bw = panelW - 110;
+		int cols = 3;
+		int gap = 7;
+		int cardW = (bw - gap * (cols - 1)) / cols;
+		int cardH = 39;
+		int cx = bx + 2 * (cardW + gap);
+		int cy = by + 2 * (cardH + gap);
+		return inside(mouseX, mouseY, cx, cy, cardW, cardH);
 	}
 
 	private HudEntry hudAt(double mouseX, double mouseY, int x, int y, int panelW) {

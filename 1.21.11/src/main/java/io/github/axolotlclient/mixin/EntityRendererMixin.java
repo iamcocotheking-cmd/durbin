@@ -28,6 +28,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.axolotlclient.AxolotlClient;
 import io.github.axolotlclient.api.requests.UserRequest;
+import io.github.axolotlclient.durbin.nametags.DurbinNameTags;
 import io.github.axolotlclient.modules.hypixel.LevelHead;
 import io.github.axolotlclient.modules.hypixel.NickHider;
 import io.github.axolotlclient.modules.hypixel.bedwars.BedwarsMod;
@@ -42,6 +43,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -86,24 +89,18 @@ public abstract class EntityRendererMixin {
 
 	@Inject(method = "submitNameTag(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;popPose()V"))
 	private void addLevel(AvatarRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
+		if (Minecraft.getInstance().level == null) {
+			return;
+		}
+		var entity = Minecraft.getInstance().level.getEntity(state.id);
+		if (!(entity instanceof Player player)) {
+			return;
+		}
+
 		if (Minecraft.getInstance().getCurrentServer() != null && Minecraft.getInstance().getCurrentServer().ip.endsWith("hypixel.net")) {
-			var entity = Minecraft.getInstance().level.getEntity(state.id);
-			if (entity instanceof Player player) {
-				if (BedwarsMod.getInstance().isEnabled() && BedwarsMod.getInstance().inGame() && BedwarsMod.getInstance().bedwarsLevelHead.get()) {
-					String text = BedwarsMod.getInstance().getGame().get().getLevelHead(player);
-					if (text != null) {
-						var y = state.showExtraEars ? -20 : -10;
-
-						if (LevelHead.getInstance().background.get()) {
-							y -= 2;
-						}
-
-						submitNodeCollector.submitNameTag(poseStack, state.nameTagAttachment, y, Component.literal(text).withStyle(s -> s.withColor(LevelHead.getInstance().textColor.get().toInt())), !state.isDiscrete, state.lightCoords, state.distanceToCameraSq, cameraRenderState);
-						((SubmitNodeCollectorExtension) submitNodeCollector).axolotlclient$lastNameTagSubmitIsLevelHead();
-					}
-				} else if (LevelHead.getInstance().enabled.get()) {
-					String text = LevelHead.getInstance().getDisplayString(player.getStringUUID());
-
+			if (BedwarsMod.getInstance().isEnabled() && BedwarsMod.getInstance().inGame() && BedwarsMod.getInstance().bedwarsLevelHead.get()) {
+				String text = BedwarsMod.getInstance().getGame().get().getLevelHead(player);
+				if (text != null) {
 					var y = state.showExtraEars ? -20 : -10;
 
 					if (LevelHead.getInstance().background.get()) {
@@ -113,6 +110,26 @@ public abstract class EntityRendererMixin {
 					submitNodeCollector.submitNameTag(poseStack, state.nameTagAttachment, y, Component.literal(text).withStyle(s -> s.withColor(LevelHead.getInstance().textColor.get().toInt())), !state.isDiscrete, state.lightCoords, state.distanceToCameraSq, cameraRenderState);
 					((SubmitNodeCollectorExtension) submitNodeCollector).axolotlclient$lastNameTagSubmitIsLevelHead();
 				}
+			} else if (LevelHead.getInstance().enabled.get()) {
+				String text = LevelHead.getInstance().getDisplayString(player.getStringUUID());
+
+				var y = state.showExtraEars ? -20 : -10;
+
+				if (LevelHead.getInstance().background.get()) {
+					y -= 2;
+				}
+
+				submitNodeCollector.submitNameTag(poseStack, state.nameTagAttachment, y, Component.literal(text).withStyle(s -> s.withColor(LevelHead.getInstance().textColor.get().toInt())), !state.isDiscrete, state.lightCoords, state.distanceToCameraSq, cameraRenderState);
+				((SubmitNodeCollectorExtension) submitNodeCollector).axolotlclient$lastNameTagSubmitIsLevelHead();
+			}
+		}
+
+		List<Component> durbinLines = DurbinNameTags.getInstance().getComponentsFor(player.getScoreboardName());
+		if (!durbinLines.isEmpty()) {
+			int baseY = state.showExtraEars ? -20 : -10;
+			for (int line = 0; line < durbinLines.size(); line++) {
+				int y = baseY - ((durbinLines.size() - 1 - line) * 10);
+				submitNodeCollector.submitNameTag(poseStack, state.nameTagAttachment, y, durbinLines.get(line), !state.isDiscrete, state.lightCoords, state.distanceToCameraSq, cameraRenderState);
 			}
 		}
 	}

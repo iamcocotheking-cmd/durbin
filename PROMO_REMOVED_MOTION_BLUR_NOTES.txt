@@ -1,0 +1,5 @@
+Changes:
+- removed the main menu side promo/YouTube image panel from render paths
+- added a Motion Blur toggle card to the Durbin Mods menu
+- added DurbinMotionBlur config holder
+Note: this is a lightweight toggle foundation; visual shader blur can be extended later if needed.
