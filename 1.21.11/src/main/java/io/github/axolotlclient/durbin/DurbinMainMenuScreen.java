@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
-	private static final int PROMO_Y_OFFSET = 34;
 	private static final Identifier[] PANORAMA = {
 		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
 		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
@@ -61,7 +60,6 @@ public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier LANGUAGE = id("icon_language.png");
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
-	private static final Identifier UNUSED_PROMO = id("promo_card.png");
 	private static final String BUNDLED_PACK_PATH = "/assets/axolotlclient/resourcepacks/Durbin_Panorama_Pack.zip";
 	private static final String PACK_FILE_NAME = "Durbin_Panorama_Pack.zip";
 
@@ -70,7 +68,6 @@ public class DurbinMainMenuScreen extends Screen {
 	private int settingsX, exitX, discordX, langX, iconY, iconSize;
 	private int closeX, closeY, closeSize;
 	private int accountX, accountY, accountSize;
-	private int promoX, promoY, promoW, promoH;
 	private final long openedAt = System.currentTimeMillis();
 	private boolean packCopied;
 
@@ -128,7 +125,6 @@ super.render(g, mouseX, mouseY, delta);
 		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
 		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
 
-		drawPromoPanel(g, mouseX, mouseY);
 
 		if (anim < 1.0F) {
 			g.fill(0, 0, this.width, this.height, argb((int) ((1.0F - anim) * 120.0F), 0, 0, 0));
@@ -165,27 +161,12 @@ super.render(g, mouseX, mouseY, delta);
 		this.accountX = 12;
 		this.accountY = 12;
 
-		this.promoW = Math.max(112, Math.min(182, this.width / 5));
-		this.promoH = promoW * 178 / 382;
-		this.promoX = this.width - promoW - 28;
-		this.promoY = this.height - promoH - 46 + PROMO_Y_OFFSET;
 	}
 
 	private void drawSmoothPanorama(GuiGraphics g) {
 		// Static high-resolution panorama face from the bundled Durbin panorama resource pack.
 		// No movement here: this removes the lag/jitter while keeping the custom menu clean.
 		drawCover(g, PANORAMA[0], 0, 0, this.width, this.height, 1024, 1024);
-	}
-
-	private void drawPromoPanel(GuiGraphics g, int mouseX, int mouseY) {
-		boolean hover = inside(mouseX, mouseY, promoX, promoY, promoW, promoH);
-		drawScaledTexture(g, PROMO, promoX, promoY, promoW, promoH, 382, 178);
-		if (hover) {
-			g.fill(promoX, promoY, promoX + promoW, promoY + promoH, argb(24, 255, 255, 255));
-		}
-		int badge = Math.max(16, promoH / 4);
-		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 64, 64);
-		drawTiny(g, "YouTube", promoX + 8, promoY + promoH - 12, 0xDDFFFFFF);
 	}
 
 	private void drawCoverOffset(GuiGraphics g, Identifier texture, int offX, int offY, int w, int h, int tw, int th) {
