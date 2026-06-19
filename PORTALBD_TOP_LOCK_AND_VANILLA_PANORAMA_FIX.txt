@@ -1,0 +1,16 @@
+Durbin Client 1.21.11 fix
+
+Fixed this build:
+- Main menu no longer uses the black grid-only background.
+- Main menu now draws Minecraft's built-in default panorama texture.
+- No custom panorama/resource pack is bundled or auto-applied.
+- PortalBD is forced to the top of the multiplayer list.
+- PortalBD name/IP are restored to:
+  Name: PortalBD
+  IP: play.portalbd.fun
+- PortalBD delete/move/replace operations are blocked at ServerList level.
+- PortalBD edit/delete/move buttons are disabled when selected where possible.
+
+Notes:
+- This starts from the reset/original mod zip, not the broken Firebase/big UI version.
+- Gradle build test could not run in the sandbox because services.gradle.org is unreachable here.

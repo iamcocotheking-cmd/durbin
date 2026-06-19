@@ -23,6 +23,7 @@
 package io.github.axolotlclient.mixin;
 
 import io.github.axolotlclient.durbin.DurbinPortalBDServer;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,5 +40,39 @@ public abstract class ServerListMixin {
 	@Inject(method = "save", at = @At("HEAD"))
 	private void durbin$lockPortalBDBeforeSave(CallbackInfo ci) {
 		DurbinPortalBDServer.ensure((ServerList) (Object) this);
+	}
+
+	@Inject(method = "remove", at = @At("HEAD"), cancellable = true, require = 0)
+	private void durbin$blockPortalBDRemove(ServerData serverData, CallbackInfo ci) {
+		if (DurbinPortalBDServer.isPortalBD(serverData)) {
+			DurbinPortalBDServer.ensure((ServerList) (Object) this);
+			ci.cancel();
+		}
+	}
+
+	@Inject(method = "replace", at = @At("HEAD"), cancellable = true, require = 0)
+	private void durbin$blockPortalBDReplace(int index, ServerData serverData, CallbackInfo ci) {
+		try {
+			ServerList servers = (ServerList) (Object) this;
+			if (index >= 0 && index < servers.size() && DurbinPortalBDServer.isPortalBD(servers.get(index))) {
+				DurbinPortalBDServer.ensure(servers);
+				ci.cancel();
+			}
+		} catch (Exception ignored) {
+		}
+	}
+
+	@Inject(method = "swap", at = @At("HEAD"), cancellable = true, require = 0)
+	private void durbin$blockPortalBDMove(int first, int second, CallbackInfo ci) {
+		try {
+			ServerList servers = (ServerList) (Object) this;
+			boolean firstPortal = first >= 0 && first < servers.size() && DurbinPortalBDServer.isPortalBD(servers.get(first));
+			boolean secondPortal = second >= 0 && second < servers.size() && DurbinPortalBDServer.isPortalBD(servers.get(second));
+			if (firstPortal || secondPortal) {
+				DurbinPortalBDServer.ensure(servers);
+				ci.cancel();
+			}
+		} catch (Exception ignored) {
+		}
 	}
 }

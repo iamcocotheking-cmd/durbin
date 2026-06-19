@@ -22,7 +22,7 @@
 
 package io.github.axolotlclient.mixin;
 
-import io.github.axolotlclient.durbin.PortalBDPromotedServer;
+import io.github.axolotlclient.durbin.DurbinPortalBDServer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Button;
@@ -50,7 +50,7 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 
 	@Inject(method = "init", at = @At("HEAD"))
 	private void durbin$ensurePortalBDBeforeLoad(CallbackInfo ci) {
-		PortalBDPromotedServer.ensure(Minecraft.getInstance());
+		DurbinPortalBDServer.ensure(Minecraft.getInstance());
 	}
 
 	@Inject(method = "init", at = @At("TAIL"))
@@ -58,20 +58,11 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 		durbin$lockPortalBDButtonsIfSelected();
 	}
 
-	/*
-	 * Minecraft 1.21.11's JoinMultiplayerScreen does not always own a render(...) method.
-	 * Injecting into render caused a startup crash on some builds. updateButtonStatus is the
-	 * safer place because vanilla calls it when the selected server changes.
-	 */
 	@Inject(method = "updateButtonStatus", at = @At("TAIL"), require = 0)
 	private void durbin$lockPortalBDAfterButtonStatus(CallbackInfo ci) {
 		durbin$lockPortalBDButtonsIfSelected();
 	}
 
-	/*
-	 * Extra safety for builds where the selection update method name changes.
-	 * If tick is not present on the target class, require = 0 prevents a crash.
-	 */
 	@Inject(method = "tick", at = @At("TAIL"), require = 0)
 	private void durbin$lockPortalBDOnTick(CallbackInfo ci) {
 		durbin$lockPortalBDButtonsIfSelected();
@@ -80,11 +71,11 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 	@Unique
 	private void durbin$lockPortalBDButtonsIfSelected() {
 		ServerData selected = durbin$getSelectedServerData();
-		if (!PortalBDPromotedServer.isPortalBD(selected)) {
+		if (!DurbinPortalBDServer.isPortalBD(selected)) {
 			return;
 		}
 
-		durbin$disableEditDeleteButtons();
+		durbin$disableProtectedButtons();
 	}
 
 	@Unique
@@ -134,7 +125,7 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 	}
 
 	@Unique
-	private void durbin$disableEditDeleteButtons() {
+	private void durbin$disableProtectedButtons() {
 		Class<?> type = this.getClass();
 		while (type != null && type != Object.class) {
 			for (Field field : type.getDeclaredFields()) {
@@ -145,7 +136,7 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 				try {
 					field.setAccessible(true);
 					Object value = field.get(this);
-					if (value instanceof Button button && durbin$isEditOrDeleteButton(button)) {
+					if (value instanceof Button button && durbin$isProtectedButton(button)) {
 						button.active = false;
 					}
 				} catch (Exception ignored) {
@@ -156,15 +147,20 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 	}
 
 	@Unique
-	private boolean durbin$isEditOrDeleteButton(Button button) {
+	private boolean durbin$isProtectedButton(Button button) {
 		String visible = button.getMessage().getString().toLowerCase(Locale.ROOT);
 		String raw = button.getMessage().toString().toLowerCase(Locale.ROOT);
 		return visible.contains("edit")
 			|| visible.contains("delete")
 			|| visible.contains("remove")
+			|| visible.contains("up")
+			|| visible.contains("down")
 			|| raw.contains("selectserver.edit")
 			|| raw.contains("selectserver.delete")
-			|| raw.contains("selectserver.remove");
+			|| raw.contains("selectserver.remove")
+			|| raw.contains("selectserver.move")
+			|| raw.contains("moveup")
+			|| raw.contains("movedown");
 	}
 
 	@Unique
