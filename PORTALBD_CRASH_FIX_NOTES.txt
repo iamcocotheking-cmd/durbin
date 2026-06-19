@@ -1,0 +1,18 @@
+Durbin Client - PortalBD Multiplayer Crash Fix
+
+Fixed crash:
+- Removed the unsafe mixin injection into JoinMultiplayerScreen.render(...).
+- Minecraft 1.21.11 can load JoinMultiplayerScreen without a direct render method on that class, so the old injection caused:
+  Mixin transformation of net.minecraft.class_500 failed
+  PortalBDMultiplayerScreenMixin durbin$lockPortalBDButtons could not find render
+
+New behavior:
+- PortalBD is still restored when Multiplayer opens.
+- Name: PortalBD
+- IP: play.portalbd.fun
+- Edit/Delete locking now runs from safer screen lifecycle hooks:
+  - init tail
+  - updateButtonStatus tail when available
+  - tick tail when available
+
+This avoids crashing the client if one of those optional methods changes.

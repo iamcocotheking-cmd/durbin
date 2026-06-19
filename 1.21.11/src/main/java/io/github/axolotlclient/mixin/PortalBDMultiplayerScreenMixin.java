@@ -24,10 +24,11 @@ package io.github.axolotlclient.mixin;
 
 import io.github.axolotlclient.durbin.PortalBDPromotedServer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +39,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 @Mixin(JoinMultiplayerScreen.class)
 public abstract class PortalBDMultiplayerScreenMixin extends Screen {
@@ -51,28 +53,58 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 		PortalBDPromotedServer.ensure(Minecraft.getInstance());
 	}
 
-	@Inject(method = "render", at = @At("TAIL"))
-	private void durbin$lockPortalBDButtons(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+	@Inject(method = "init", at = @At("TAIL"))
+	private void durbin$lockPortalBDAfterInit(CallbackInfo ci) {
+		durbin$lockPortalBDButtonsIfSelected();
+	}
+
+	/*
+	 * Minecraft 1.21.11's JoinMultiplayerScreen does not always own a render(...) method.
+	 * Injecting into render caused a startup crash on some builds. updateButtonStatus is the
+	 * safer place because vanilla calls it when the selected server changes.
+	 */
+	@Inject(method = "updateButtonStatus", at = @At("TAIL"), require = 0)
+	private void durbin$lockPortalBDAfterButtonStatus(CallbackInfo ci) {
+		durbin$lockPortalBDButtonsIfSelected();
+	}
+
+	/*
+	 * Extra safety for builds where the selection update method name changes.
+	 * If tick is not present on the target class, require = 0 prevents a crash.
+	 */
+	@Inject(method = "tick", at = @At("TAIL"), require = 0)
+	private void durbin$lockPortalBDOnTick(CallbackInfo ci) {
+		durbin$lockPortalBDButtonsIfSelected();
+	}
+
+	@Unique
+	private void durbin$lockPortalBDButtonsIfSelected() {
 		ServerData selected = durbin$getSelectedServerData();
 		if (!PortalBDPromotedServer.isPortalBD(selected)) {
 			return;
 		}
 
-		durbin$setButtonActive("editButton", false);
-		durbin$setButtonActive("deleteButton", false);
+		durbin$disableEditDeleteButtons();
 	}
 
 	@Unique
 	private ServerData durbin$getSelectedServerData() {
-		Object list = durbin$getFieldValue("serverSelectionList");
-		if (list == null) {
-			list = durbin$findFieldValueBySimpleName("ServerSelectionList");
-		}
-		if (list == null) {
-			return null;
+		Object list = durbin$getFieldValueByType(ServerSelectionList.class);
+		if (list instanceof AbstractSelectionList<?> selectionList) {
+			Object selected = selectionList.getSelected();
+			ServerData serverData = durbin$getServerDataFromEntry(selected);
+			if (serverData != null) {
+				return serverData;
+			}
 		}
 
-		Object selected = durbin$invokeNoArg(list, "getSelected");
+		Object reflectedList = durbin$getFieldValueByAssignableSimpleName("ServerSelectionList");
+		Object selected = durbin$invokeNoArg(reflectedList, "getSelected");
+		return durbin$getServerDataFromEntry(selected);
+	}
+
+	@Unique
+	private ServerData durbin$getServerDataFromEntry(Object selected) {
 		if (selected == null) {
 			return null;
 		}
@@ -102,22 +134,51 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 	}
 
 	@Unique
-	private void durbin$setButtonActive(String fieldName, boolean active) {
-		Object value = durbin$getFieldValue(fieldName);
-		if (value instanceof Button button) {
-			button.active = active;
+	private void durbin$disableEditDeleteButtons() {
+		Class<?> type = this.getClass();
+		while (type != null && type != Object.class) {
+			for (Field field : type.getDeclaredFields()) {
+				if (!Button.class.isAssignableFrom(field.getType())) {
+					continue;
+				}
+
+				try {
+					field.setAccessible(true);
+					Object value = field.get(this);
+					if (value instanceof Button button && durbin$isEditOrDeleteButton(button)) {
+						button.active = false;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+			type = type.getSuperclass();
 		}
 	}
 
 	@Unique
-	private Object durbin$getFieldValue(String fieldName) {
+	private boolean durbin$isEditOrDeleteButton(Button button) {
+		String visible = button.getMessage().getString().toLowerCase(Locale.ROOT);
+		String raw = button.getMessage().toString().toLowerCase(Locale.ROOT);
+		return visible.contains("edit")
+			|| visible.contains("delete")
+			|| visible.contains("remove")
+			|| raw.contains("selectserver.edit")
+			|| raw.contains("selectserver.delete")
+			|| raw.contains("selectserver.remove");
+	}
+
+	@Unique
+	private Object durbin$getFieldValueByType(Class<?> wantedType) {
 		Class<?> type = this.getClass();
 		while (type != null && type != Object.class) {
-			try {
-				Field field = type.getDeclaredField(fieldName);
-				field.setAccessible(true);
-				return field.get(this);
-			} catch (Exception ignored) {
+			for (Field field : type.getDeclaredFields()) {
+				if (wantedType.isAssignableFrom(field.getType())) {
+					try {
+						field.setAccessible(true);
+						return field.get(this);
+					} catch (Exception ignored) {
+					}
+				}
 			}
 			type = type.getSuperclass();
 		}
@@ -125,7 +186,7 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 	}
 
 	@Unique
-	private Object durbin$findFieldValueBySimpleName(String simpleName) {
+	private Object durbin$getFieldValueByAssignableSimpleName(String simpleName) {
 		Class<?> type = this.getClass();
 		while (type != null && type != Object.class) {
 			for (Field field : type.getDeclaredFields()) {
@@ -144,6 +205,10 @@ public abstract class PortalBDMultiplayerScreenMixin extends Screen {
 
 	@Unique
 	private Object durbin$invokeNoArg(Object target, String methodName) {
+		if (target == null) {
+			return null;
+		}
+
 		Class<?> type = target.getClass();
 		while (type != null && type != Object.class) {
 			try {
