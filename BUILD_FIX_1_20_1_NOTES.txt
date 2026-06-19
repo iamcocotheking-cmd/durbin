@@ -1,0 +1,11 @@
+Durbin Client 1.20.1 build fix
+
+This fixes the GitHub Actions error where Fabric Loom/Ploceus 1.16.3 required Java 21 but the workflow used Java 17.
+
+Important:
+- GitHub Actions uses Java 21 to run Gradle/Fabric Loom.
+- The 1.20 module still targets Java 17 bytecode in 1.20/build.gradle.kts.
+- The workflow builds :1.20:build.
+- Only the 1.20 module is enabled in gradle.properties.
+
+This avoids the old 1.21.11 PROMO compile error because the workflow no longer builds :1.21.11.

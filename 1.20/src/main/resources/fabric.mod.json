@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "axolotlclient",
 	"version": "${version}",
-	"name": "Durbin Client (Axolotl Fork)",
-	"description": "Durbin Client fork built from AxolotlClient source. Original AxolotlClient code by moehreag and contributors.",
+	"name": "AxolotlClient",
+	"description": "Free & Open-Source Minecraft Mod for use in PvP and other Scenarios",
 	"authors": [
 		"moehreag"
 	],

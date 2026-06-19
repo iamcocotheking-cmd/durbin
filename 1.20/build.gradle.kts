@@ -7,7 +7,7 @@ val mappingsBuild = "23"
 val fapi = "0.92.2"
 group = project.property("maven_group")!!
 version = "${project.property("version")}+$minecraftVersion"
-base.archivesName = "DurbinClient-AxolotlFork"
+base.archivesName = "DurbinClient-AxolotlFork-1.20.1"
 
 loom {
 	accessWidenerPath.set(file("src/main/resources/axolotlclient.classtweaker"))

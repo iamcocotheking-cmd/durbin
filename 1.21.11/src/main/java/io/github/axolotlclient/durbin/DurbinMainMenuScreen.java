@@ -23,40 +23,56 @@
 package io.github.axolotlclient.durbin;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.options.LanguageSelectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
-import net.minecraft.client.gui.screens.options.LanguageSelectScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Desktop;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class DurbinMainMenuScreen extends Screen {
+	private static final int PROMO_Y_OFFSET = 34;
+	private static final Identifier[] PANORAMA = {
+		id("panorama_0.png"), id("panorama_1.png"), id("panorama_2.png"),
+		id("panorama_3.png"), id("panorama_4.png"), id("panorama_5.png")
+	};
 	private static final Identifier LOGO = id("logo_main.png");
 	private static final Identifier SINGLE = id("button_singleplayer.png");
 	private static final Identifier MULTI = id("button_multiplayer.png");
 	private static final Identifier SETTINGS = id("icon_settings.png");
 	private static final Identifier EXIT = id("icon_exit.png");
 	private static final Identifier DISCORD = id("icon_discord.png");
+	private static final Identifier YOUTUBE = id("icon_youtube.png");
 	private static final Identifier LANGUAGE = id("icon_language.png");
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
-	private static final Identifier BACKGROUND = id("background_main.png");
+	private static final Identifier UNUSED_PROMO = id("promo_card.png");
+	private static final String BUNDLED_PACK_PATH = "/assets/axolotlclient/resourcepacks/Durbin_Panorama_Pack.zip";
+	private static final String PACK_FILE_NAME = "Durbin_Panorama_Pack.zip";
 
 	private int singleX, singleY, singleW, singleH;
 	private int multiX, multiY, multiW, multiH;
 	private int settingsX, exitX, discordX, langX, iconY, iconSize;
 	private int closeX, closeY, closeSize;
 	private int accountX, accountY, accountSize;
+	private int promoX, promoY, promoW, promoH;
 	private final long openedAt = System.currentTimeMillis();
+	private boolean packCopied;
 
 	public DurbinMainMenuScreen() {
 		super(Component.literal("Durbin Client Main Menu"));
@@ -81,14 +97,19 @@ public class DurbinMainMenuScreen extends Screen {
 
 	@Override
 	public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.render(g, mouseX, mouseY, delta);
+		
+		DurbinPanoramaPackInstaller.install();
+super.render(g, mouseX, mouseY, delta);
+		ensureDurbinPanoramaPackInstalled();
 		layout();
 
 		float anim = openProgress();
 		int introRise = (int) ((1.0F - anim) * 22.0F);
 
-		// Use the provided background image directly on the main menu in full quality.
-		drawCustomBackground(g);
+		drawSmoothPanorama(g);
+		g.fill(0, 0, this.width, this.height, argb(130, 0, 0, 0));
+		g.fill(0, 0, this.width, 55, argb(35, 0, 0, 0));
+		g.fill(0, this.height - 70, this.width, this.height, argb(65, 0, 0, 0));
 
 		int logoW = Math.max(110, Math.min(160, this.width / 5));
 		int logoH = logoW * 236 / 376;
@@ -107,7 +128,7 @@ public class DurbinMainMenuScreen extends Screen {
 		drawIconButton(g, ACCOUNT, accountX, accountY, accountSize, mouseX, mouseY);
 		drawIconButton(g, CLOSE, closeX, closeY, closeSize, mouseX, mouseY);
 
-		drawTiny(g, "PortalBD: play.portalbd.fun", (this.width - 92) / 2, multiY + multiH + 13 + introRise, 0x99FFFFFF);
+		drawPromoPanel(g, mouseX, mouseY);
 
 		if (anim < 1.0F) {
 			g.fill(0, 0, this.width, this.height, argb((int) ((1.0F - anim) * 120.0F), 0, 0, 0));
@@ -143,22 +164,49 @@ public class DurbinMainMenuScreen extends Screen {
 		this.accountSize = closeSize;
 		this.accountX = 12;
 		this.accountY = 12;
+
+		this.promoW = Math.max(112, Math.min(182, this.width / 5));
+		this.promoH = promoW * 178 / 382;
+		this.promoX = this.width - promoW - 28;
+		this.promoY = this.height - promoH - 46 + PROMO_Y_OFFSET;
 	}
 
-	private void drawCustomBackground(GuiGraphics g) {
-		int texW = 1920;
-		int texH = 1080;
-		float scale = Math.max((float) this.width / (float) texW, (float) this.height / (float) texH);
-		int drawW = Math.round(texW * scale);
-		int drawH = Math.round(texH * scale);
-		int x = (this.width - drawW) / 2;
-		int y = (this.height - drawH) / 2;
-		drawScaledTexture(g, BACKGROUND, x, y, drawW, drawH, texW, texH);
+	private void drawSmoothPanorama(GuiGraphics g) {
+		// Static high-resolution panorama face from the bundled Durbin panorama resource pack.
+		// No movement here: this removes the lag/jitter while keeping the custom menu clean.
+		drawCover(g, PANORAMA[0], 0, 0, this.width, this.height, 1024, 1024);
+	}
 
-		// Small dark overlay keeps Durbin buttons readable while preserving the uploaded background image.
-		g.fill(0, 0, this.width, this.height, argb(72, 0, 0, 0));
-		g.fill(0, 0, this.width, 58, argb(42, 0, 0, 0));
-		g.fill(0, this.height - 76, this.width, this.height, argb(42, 0, 0, 0));
+	private void drawPromoPanel(GuiGraphics g, int mouseX, int mouseY) {
+		boolean hover = inside(mouseX, mouseY, promoX, promoY, promoW, promoH);
+		drawScaledTexture(g, PROMO, promoX, promoY, promoW, promoH, 382, 178);
+		if (hover) {
+			g.fill(promoX, promoY, promoX + promoW, promoY + promoH, argb(24, 255, 255, 255));
+		}
+		int badge = Math.max(16, promoH / 4);
+		drawScaledTexture(g, YOUTUBE, promoX + promoW - badge - 6, promoY + 6, badge, badge, 64, 64);
+		drawTiny(g, "YouTube", promoX + 8, promoY + promoH - 12, 0xDDFFFFFF);
+	}
+
+	private void drawCoverOffset(GuiGraphics g, Identifier texture, int offX, int offY, int w, int h, int tw, int th) {
+		drawCover(g, texture, offX, offY, w, h, tw, th);
+	}
+
+	private void drawCover(GuiGraphics g, Identifier texture, int x, int y, int w, int h, int tw, int th) {
+		float targetRatio = (float) w / (float) h;
+		float sourceRatio = (float) tw / (float) th;
+		int drawW;
+		int drawH;
+		if (sourceRatio > targetRatio) {
+			drawH = h;
+			drawW = Math.round(h * sourceRatio);
+		} else {
+			drawW = w;
+			drawH = Math.round(w / sourceRatio);
+		}
+		int dx = x + (w - drawW) / 2;
+		int dy = y + (h - drawH) / 2;
+		drawScaledTexture(g, texture, dx, dy, drawW, drawH, tw, th);
 	}
 
 	private void drawImageButton(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th, boolean hover) {
@@ -204,7 +252,7 @@ public class DurbinMainMenuScreen extends Screen {
 		}
 		if (inside(mouseX, mouseY, multiX, multiY, multiW, multiH)) {
 			playClick();
-			DurbinPortalBDServer.ensure(minecraft);
+			ensurePortalBdServer();
 			minecraft.setScreen(new JoinMultiplayerScreen(this));
 			return true;
 		}
@@ -223,6 +271,7 @@ public class DurbinMainMenuScreen extends Screen {
 			openUrl("https://discord.gg/PqnbXNrtHR");
 			return true;
 		}
+		
 		if (inside(mouseX, mouseY, langX, iconY, iconSize, iconSize)) {
 			playClick();
 			minecraft.setScreen(new LanguageSelectScreen(this, minecraft.options, minecraft.getLanguageManager()));
@@ -242,6 +291,38 @@ public class DurbinMainMenuScreen extends Screen {
 	private void playClick() {
 		try {
 			minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+		} catch (Exception ignored) {
+		}
+	}
+
+	private void ensurePortalBdServer() {
+		try {
+			ServerList servers = new ServerList(minecraft);
+			servers.load();
+			ServerData existing = servers.get("play.portalbd.fun");
+			if (existing == null) {
+				servers.add(new ServerData("PORTALBD", "play.portalbd.fun", ServerData.Type.OTHER), true);
+			} else {
+				existing.name = "PORTALBD";
+				existing.ip = "play.portalbd.fun";
+			}
+			servers.save();
+		} catch (Exception ignored) {
+		}
+	}
+
+	private void ensureDurbinPanoramaPackInstalled() {
+		if (packCopied || minecraft == null) {
+			return;
+		}
+		packCopied = true;
+		try (InputStream in = DurbinMainMenuScreen.class.getResourceAsStream(BUNDLED_PACK_PATH)) {
+			if (in == null) {
+				return;
+			}
+			Path resourcePacks = minecraft.gameDirectory.toPath().resolve("resourcepacks");
+			Files.createDirectories(resourcePacks);
+			Files.copy(in, resourcePacks.resolve(PACK_FILE_NAME), StandardCopyOption.REPLACE_EXISTING);
 		} catch (Exception ignored) {
 		}
 	}

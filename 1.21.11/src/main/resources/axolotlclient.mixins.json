@@ -56,8 +56,6 @@
 		"ReloadableResourceManagerMixin",
 		"ScreenMixin",
 		"ScreenshotRecorderMixin",
-		"ServerListMixin",
-		"PortalBDMultiplayerScreenMixin",
 		"ServerPackManagerAccessor",
 		"ShieldSpecialRendererMixin",
 		"SingleQuadParticleAccessor",

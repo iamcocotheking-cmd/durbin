@@ -27,7 +27,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.axolotlclient.api.API;
 import io.github.axolotlclient.api.multiplayer.FriendsMultiplayerScreen;
 import io.github.axolotlclient.api.requests.FriendRequest;
-import io.github.axolotlclient.durbin.DurbinPortalBDServer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
@@ -92,9 +91,4 @@ public abstract class JoinMulitplayerScreenMixin extends Screen {
 		}
 		return par3;
 	}
-	@Inject(method = "init", at = @At("TAIL"))
-	private void durbin$ensurePortalBD(CallbackInfo ci) {
-		DurbinPortalBDServer.ensure(client);
-	}
-
 }

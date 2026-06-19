@@ -23,7 +23,6 @@
 package io.github.axolotlclient.modules.hud;
 
 import io.github.axolotlclient.bridge.render.AxoRenderContext;
-import io.github.axolotlclient.durbin.DurbinClientScreen;
 import io.github.axolotlclient.modules.hud.gui.hud.KeystrokeHud;
 import io.github.axolotlclient.modules.hud.gui.hud.PackDisplayHud;
 import io.github.axolotlclient.modules.hud.gui.hud.PlayerHud;
@@ -43,7 +42,7 @@ public class HudManager extends HudManagerCommon {
 
 	@Override
 	protected void openScreen() {
-		MinecraftClient.getInstance().setScreen(new DurbinClientScreen(MinecraftClient.getInstance().currentScreen));
+		MinecraftClient.getInstance().setScreen(new HudEditScreen());
 	}
 
 	@Override

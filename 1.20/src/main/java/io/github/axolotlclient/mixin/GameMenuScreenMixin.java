@@ -29,7 +29,6 @@ import io.github.axolotlclient.AxolotlClientConfigCommon;
 import io.github.axolotlclient.api.API;
 import io.github.axolotlclient.api.ChatsSidebar;
 import io.github.axolotlclient.api.FriendsScreen;
-import io.github.axolotlclient.durbin.DurbinClientScreen;
 import io.github.axolotlclient.modules.hud.HudEditScreen;
 import io.github.axolotlclient.modules.hypixel.HypixelAbstractionLayer;
 import io.github.axolotlclient.modules.hypixel.HypixelMods;
@@ -70,7 +69,7 @@ public abstract class GameMenuScreenMixin extends Screen {
 			return createLinkConfirmationButton(text, string);
 		}
 
-		return createButton(Text.translatable("title_short"), () -> new DurbinClientScreen(this));
+		return createButton(Text.translatable("title_short"), () -> new HudEditScreen(this));
 	}
 
 	@Shadow

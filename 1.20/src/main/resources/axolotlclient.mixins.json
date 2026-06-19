@@ -55,8 +55,6 @@
 		"ReloadableResourceManagerMixin",
 		"RenderSystemMixin",
 		"ScreenMixin",
-		"ServerListMixin",
-		"PortalBDMultiplayerScreenMixin",
 		"ScreenshotRecorderMixin",
 		"ShaderEffectAccessor",
 		"SplashOverlayMixin",

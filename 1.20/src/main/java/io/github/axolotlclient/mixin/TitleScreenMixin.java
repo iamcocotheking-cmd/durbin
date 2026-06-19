@@ -36,8 +36,6 @@ import io.github.axolotlclient.api.chat.ChatListScreen;
 import io.github.axolotlclient.api.requests.GlobalDataRequest;
 import io.github.axolotlclient.modules.auth.Auth;
 import io.github.axolotlclient.modules.auth.AuthWidget;
-import io.github.axolotlclient.durbin.DurbinClientScreen;
-import io.github.axolotlclient.durbin.DurbinMainMenuScreen;
 import io.github.axolotlclient.modules.hud.HudEditScreen;
 import io.github.axolotlclient.modules.zoom.Zoom;
 import io.github.axolotlclient.util.OSUtil;
@@ -78,13 +76,6 @@ public abstract class TitleScreenMixin extends Screen {
 		if (MinecraftClient.getInstance().options.saveToolbarActivatorKey.keyEquals((KeyBind) Zoom.getInstance().getKey())) {
 			MinecraftClient.getInstance().options.saveToolbarActivatorKey.setBoundKey(InputUtil.UNKNOWN_KEY);
 			AxolotlClientCommon.getInstance().getLogger().info("Unbound \"Save Toolbar Activator\" to resolve conflict with the zoom key!");
-		}
-	}
-
-	@Inject(method = "init", at = @At("TAIL"))
-	private void durbin$openCustomMainMenu(CallbackInfo ci) {
-		if (this.client != null && !(this.client.currentScreen instanceof DurbinMainMenuScreen)) {
-			this.client.setScreen(new DurbinMainMenuScreen());
 		}
 	}
 
@@ -146,7 +137,7 @@ public abstract class TitleScreenMixin extends Screen {
 		if (AxolotlClientConfigCommon.instance().titleScreenOptionButtonMode.get().showButton()) {
 			args.set(0, Text.translatable("config"));
 			args.set(1, (ButtonWidget.PressAction) buttonWidget -> MinecraftClient.getInstance()
-				.setScreen(new DurbinClientScreen(this)));
+				.setScreen(new HudEditScreen(this)));
 		}
 	}
 
