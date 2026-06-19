@@ -49,7 +49,7 @@ public class DurbinMainMenuScreen extends Screen {
 	private static final Identifier LANGUAGE = id("icon_language.png");
 	private static final Identifier CLOSE = id("icon_close.png");
 	private static final Identifier ACCOUNT = id("icon_account.png");
-	private static final Identifier VANILLA_PANORAMA = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/title/background/panorama_0.png");
+	private static final Identifier BACKGROUND = id("background_main.png");
 
 	private int singleX, singleY, singleW, singleH;
 	private int multiX, multiY, multiW, multiH;
@@ -87,8 +87,8 @@ public class DurbinMainMenuScreen extends Screen {
 		float anim = openProgress();
 		int introRise = (int) ((1.0F - anim) * 22.0F);
 
-		// Use Minecraft's built-in default panorama texture. No custom panorama/resource pack is bundled or auto-applied.
-		drawVanillaPanoramaBackground(g);
+		// Use the provided background image directly on the main menu in full quality.
+		drawCustomBackground(g);
 
 		int logoW = Math.max(110, Math.min(160, this.width / 5));
 		int logoH = logoW * 236 / 376;
@@ -145,16 +145,20 @@ public class DurbinMainMenuScreen extends Screen {
 		this.accountY = 12;
 	}
 
-	private void drawVanillaPanoramaBackground(GuiGraphics g) {
-		int size = Math.max(this.width, this.height);
-		int x = (this.width - size) / 2;
-		int y = (this.height - size) / 2;
-		drawScaledTexture(g, VANILLA_PANORAMA, x, y, size, size, 256, 256);
+	private void drawCustomBackground(GuiGraphics g) {
+		int texW = 1920;
+		int texH = 1080;
+		float scale = Math.max((float) this.width / (float) texW, (float) this.height / (float) texH);
+		int drawW = Math.round(texW * scale);
+		int drawH = Math.round(texH * scale);
+		int x = (this.width - drawW) / 2;
+		int y = (this.height - drawH) / 2;
+		drawScaledTexture(g, BACKGROUND, x, y, drawW, drawH, texW, texH);
 
-		// Small dark overlay keeps Durbin buttons readable while still showing the normal Minecraft panorama.
-		g.fill(0, 0, this.width, this.height, argb(88, 0, 0, 0));
-		g.fill(0, 0, this.width, 58, argb(55, 0, 0, 0));
-		g.fill(0, this.height - 76, this.width, this.height, argb(55, 0, 0, 0));
+		// Small dark overlay keeps Durbin buttons readable while preserving the uploaded background image.
+		g.fill(0, 0, this.width, this.height, argb(72, 0, 0, 0));
+		g.fill(0, 0, this.width, 58, argb(42, 0, 0, 0));
+		g.fill(0, this.height - 76, this.width, this.height, argb(42, 0, 0, 0));
 	}
 
 	private void drawImageButton(GuiGraphics g, Identifier tex, int x, int y, int w, int h, int tw, int th, boolean hover) {
